@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App基本应用程序主题 -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!--AppBar背景色，应用的主要色调，actionBar默认使用该颜色-->
+        <item name="colorPrimary">#fff</item>
+        <!--状态栏颜色，应用的主要暗色调，statusBarColor默认使用该颜色-->
+        <item name="colorPrimaryDark">#fff</item>
+        <!--一般控件的选种效果默认采用该颜色-->
+        <item name="colorAccent">#000</item>
+    </style>
+    <style name="SplashTheme" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
+</resources>

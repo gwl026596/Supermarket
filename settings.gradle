@@ -1,0 +1,3 @@
+include ':httprequestlibrary'
+include ':app'
+rootProject.name = "Supermarket"

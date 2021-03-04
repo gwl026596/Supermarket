@@ -1,0 +1,44 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext.kotlin_version = "1.4.31"
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:4.1.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.3'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext {//定义所有project公用参数  使用rootProject.ext.XX就能拿到相应对象
+
+    debug = [
+            'host'              : 'http://106.14.161.98:8280/',
+            'url_h5_header'        : 'http://106.14.161.98/',
+            'url_h5_footer'        : '/app-loan-market/#/',
+            'url_h5'        : 'http://106.14.161.98/1.2.3/app-loan-market/#/',
+    ]
+    release = [
+            'host'              : 'http://106.14.161.98:8280/',
+            'url_h5_header'        : 'http://106.14.161.98/',
+            'url_h5_footer'        : '/app-loan-market/#/',
+            'url_h5'        : 'http://106.14.161.98/1.2.3/app-loan-market/#/',
+
+    ]
+
+}
