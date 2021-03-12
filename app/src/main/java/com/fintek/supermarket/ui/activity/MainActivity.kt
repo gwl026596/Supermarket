@@ -3,6 +3,7 @@ package com.fintek.supermarket.ui.activity
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.view.KeyEvent
 import android.webkit.*
 import androidx.annotation.Keep
 import com.fintek.supermarket.R
@@ -108,11 +109,20 @@ class MainActivity : BaseActivity() {
      fun call(methodName: String?, argStr: String?) {
          //example methodName: "android.syncSave"
          //你需要自己调用到syncSave/doSync/doSyncWithReturn/doIdentityWithReturnMatch内
-         Log.d("js调用android",methodName +"==="+argStr)
+         Log.d("js调用android", methodName + "===" + argStr)
      }
  }
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
     }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
+            // 返回上一页面
+            webView.goBack()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
 }
