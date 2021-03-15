@@ -5,11 +5,13 @@ import android.os.Build
 import android.util.Log
 import android.view.KeyEvent
 import android.webkit.*
-import androidx.annotation.Keep
 import com.fintek.supermarket.R
 import com.fintek.supermarket.ui.activity.base.BaseActivity
 import com.gyf.immersionbar.ImmersionBar
 import kotlinx.android.synthetic.main.activity_main.*
+import org.json.JSONException
+import wendu.dsbridge.CompletionHandler
+import wendu.dsbridge.DWebView
 import java.util.*
 
 
@@ -19,10 +21,13 @@ class MainActivity : BaseActivity() {
     }
 
     override fun initView() {
-        initWebView()
+        //initWebView()
     }
 
     override fun initData() {
+        // set debug mode
+        DWebView.setWebContentsDebuggingEnabled(true)
+        webView.addJavascriptObject(MyJavascriptInterface(), "android")
         val url = intent?.getStringExtra("url")
         url?.let {
             webView.loadUrl(it)
@@ -62,7 +67,7 @@ class MainActivity : BaseActivity() {
         webSettings.setGeolocationEnabled(true)
         webSettings.setGeolocationDatabasePath(dir)
         webSettings.domStorageEnabled = true
-        webView.addJavascriptInterface(MyJavascriptInterface(), "_dsbridge")
+        webView.addJavascriptObject(MyJavascriptInterface(), "android")
         //设置WebView浏览器,辅助WebView处理Javascript的对话框，网站图标，网站title，加载进度等.
         webView.setWebChromeClient(object : WebChromeClient() {
             override fun onReceivedTitle(view: WebView, title: String) {
@@ -104,13 +109,37 @@ class MainActivity : BaseActivity() {
 
     }
  class MyJavascriptInterface(){
-     @Keep
      @JavascriptInterface
-     fun call(methodName: String?, argStr: String?) {
-         //example methodName: "android.syncSave"
-         //你需要自己调用到syncSave/doSync/doSyncWithReturn/doIdentityWithReturnMatch内
-         Log.d("js调用android", methodName + "===" + argStr)
+     @Throws(JSONException::class)
+     fun doSync(args: Any?): Any? {
+         Log.d("js调用android1", args.toString())
+         return args
      }
+     @JavascriptInterface
+     @Throws(JSONException::class)
+     fun syncSave(args: Any?): Any? {
+         Log.d("js调用android2", args.toString())
+         return args
+     }
+     @JavascriptInterface
+     @Throws(JSONException::class)
+     fun doSyncWithReturn(args: Any?): Any? {
+         Log.d("js调用android3", args.toString())
+         return args
+     }
+     @JavascriptInterface
+     @Throws(JSONException::class)
+     fun doIdentityWithReturnMatch(args: Any?): Any? {
+         Log.d("js调用android4", args.toString())
+         return args
+     }
+
+//     @JavascriptInterface
+//     fun asyn(args: Any?, handler: CompletionHandler<String>) {
+//         Log.d("js调用androidvv", args.toString())
+//         handler.complete(args as String?)
+//     }
+
  }
     override fun onDestroy() {
         super.onDestroy()
