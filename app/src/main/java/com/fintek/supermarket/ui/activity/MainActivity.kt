@@ -5,14 +5,19 @@ import android.os.Build
 import android.util.Log
 import android.view.KeyEvent
 import android.webkit.*
+import com.fintek.supermarket.MyAppclication
 import com.fintek.supermarket.R
+import com.fintek.supermarket.model.JSResponse
 import com.fintek.supermarket.ui.activity.base.BaseActivity
+import com.google.gson.Gson
 import com.gyf.immersionbar.ImmersionBar
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
+import org.json.JSONObject
 import wendu.dsbridge.CompletionHandler
 import wendu.dsbridge.DWebView
-import java.util.*
+import wendu.dsbridge.OnReturnValue
+import kotlin.jvm.Throws
 
 
 class MainActivity : BaseActivity() {
@@ -108,7 +113,7 @@ class MainActivity : BaseActivity() {
         })
 
     }
- class MyJavascriptInterface(){
+ inner class MyJavascriptInterface(){
      @JavascriptInterface
      @Throws(JSONException::class)
      fun doSync(args: Any?): Any? {
@@ -125,6 +130,34 @@ class MainActivity : BaseActivity() {
      @Throws(JSONException::class)
      fun doSyncWithReturn(args: Any?): Any? {
          Log.d("js调用android3", args.toString())
+         val jsonObject = JSONObject(args.toString())
+         val type = jsonObject.getString("type")
+         if(type=="getHttpHeaderJson"){
+             val hashMapOf = hashMapOf<String, String>()
+             hashMapOf.put("x-auth-token",MyAppclication.xAuthToken)
+             hashMapOf.put("x-merchant",MyAppclication.xMerchan)
+             hashMapOf.put("x-version",MyAppclication.xVersion)
+             hashMapOf.put("adid",MyAppclication.adid)
+             hashMapOf.put("app-name",MyAppclication.appName)
+             hashMapOf.put("x-package-name",MyAppclication.xPackageName)
+
+             val data = JSONObject(hashMapOf as Map<*, *>)
+             Log.d("js调用android3ccff", data.toString())
+             val jsResponse=JSResponse(1,data.toString())
+             val gson = Gson()
+             val toJson = gson.toJson(jsResponse)
+             Log.d("js调用android3ccff22",toJson.replace("\\",""))
+             webView.callHandler(
+                 "getHttpHeaderJson",
+                 arrayOf<String>(toJson.replace("\\","")),
+                 object : OnReturnValue<String>{
+                     override fun onValue(retValue: String?) {
+                         Log.d("js调用androidffcff", retValue.toString())
+                     }
+
+                 }
+             )
+         }
          return args
      }
      @JavascriptInterface
