@@ -1,26 +1,32 @@
 package com.fintek.supermarket.ui.activity
 
+import android.content.Intent
 import android.net.Uri
-import android.os.Build
+import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
 import android.webkit.*
+import com.adjust.sdk.Adjust
+import com.adjust.sdk.AdjustEvent
+import com.fintek.supermarket.BuildConfig
 import com.fintek.supermarket.MyAppclication
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
+import com.fintek.supermarket.model.UserInfoModel
 import com.fintek.supermarket.ui.activity.base.BaseActivity
+import com.fintek.supermarket.utils.CommonUtils
+import com.fintek.supermarket.utils.SharedPreferencesUtils
 import com.google.gson.Gson
-import com.gyf.immersionbar.ImmersionBar
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
 import wendu.dsbridge.CompletionHandler
 import wendu.dsbridge.DWebView
-import wendu.dsbridge.OnReturnValue
-import kotlin.jvm.Throws
+import java.util.*
 
 
 class MainActivity : BaseActivity() {
+     var url:String?=null
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
@@ -33,139 +39,131 @@ class MainActivity : BaseActivity() {
         // set debug mode
         DWebView.setWebContentsDebuggingEnabled(true)
         webView.addJavascriptObject(MyJavascriptInterface(), "android")
-        val url = intent?.getStringExtra("url")
+         url = intent?.getStringExtra("url")
         url?.let {
             webView.loadUrl(it)
         }
 
     }
+    /* override fun initImmersionBar() {
+         super.initImmersionBar()
+         ImmersionBar.with(this)
+             .fullScreen(false)
+             .autoStatusBarDarkModeEnable(true, 0.2f)
+             .init()
+     }
+ */
 
-    override fun initImmersionBar() {
-        super.initImmersionBar()
-        ImmersionBar.with(this)
-            .transparentStatusBar()
-            .fullScreen(false)
-            .statusBarDarkFont(true)
-            .autoStatusBarDarkModeEnable(true, 0.2f)
-            .init()
-    }
-    /**
-     * 初始化WebView
-     */
-    private fun initWebView() {
-        val webSettings: WebSettings = webView.getSettings()
-        val dir = this.applicationContext.getDir("database", MODE_PRIVATE).path
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+    inner class MyJavascriptInterface() {
+        @JavascriptInterface
+        @Throws(JSONException::class)
+        fun doSync(args: Any?) {
+            Log.d("js调用android1", args.toString())
+            val jsonObject = JSONObject(args.toString())
+            val type = jsonObject.getString("type")
+            val requestParamsData = jsonObject.getString("requestParamsData")
+            if (type == "appEvent") {
+                val eventToken = when (requestParamsData) {
+                    "applyEvent" -> "fcx4vl"
+                    "registerEvent" -> "69dk9s"
+                    else -> "33fjou"
+                }
+                val adjustEvent = AdjustEvent(eventToken)
+                Adjust.trackEvent(adjustEvent)
+            } else if (type == "doBrowser") {
+                val uri = Uri.parse(requestParamsData.replace("\"", ""))
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.setClassName("com.android.browser", "com.android.browser.BrowserActivity")
+                startActivity(intent)
+            }else if (type=="navigateToGP"){
+                try {
+                    val uri = Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID)
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    intent.setPackage("com.android.vending")
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
-        //允许在WebView中执行javascript
-        webSettings.javaScriptEnabled = true
-        //设置WebView是否支持使用屏幕控件或手势进行缩放，默认是true，支持缩放。
-        webSettings.setSupportZoom(true)
-        //自适应任意大小的网页
-        webSettings.useWideViewPort = true
-        webSettings.loadWithOverviewMode = true
-        //阻止图片网络数据
-        webSettings.blockNetworkImage = true
-        webSettings.javaScriptCanOpenWindowsAutomatically = true
-        webSettings.loadsImagesAutomatically = true
-        webSettings.setGeolocationEnabled(true)
-        webSettings.setGeolocationDatabasePath(dir)
-        webSettings.domStorageEnabled = true
-        webView.addJavascriptObject(MyJavascriptInterface(), "android")
-        //设置WebView浏览器,辅助WebView处理Javascript的对话框，网站图标，网站title，加载进度等.
-        webView.setWebChromeClient(object : WebChromeClient() {
-            override fun onReceivedTitle(view: WebView, title: String) {
-                super.onReceivedTitle(view, title)
+
+        @JavascriptInterface
+        @Throws(JSONException::class)
+        fun syncSave(args: Any?) {
+            Log.d("js调用android2", args.toString())
+            val jsonObject = JSONObject(args.toString())
+            val type = jsonObject.getString("type")
+            val requestParamsData = jsonObject.getString("requestParamsData")
+
+            if (type == "saveSp") {
+                val loginInfo = JSONObject(requestParamsData)
+                val userInfoModel: UserInfoModel = Gson().fromJson(loginInfo.getString("loginInfo"))
+                SharedPreferencesUtils
+                    .init(this@MainActivity)
+                    .putValue("phone", userInfoModel.phone)
+                    .putValue("token", userInfoModel.token)
+                    .putValue("userId", userInfoModel.userId)
+                    .putValue("username", userInfoModel.username)
+                MyAppclication.xAuthToken=userInfoModel.token
+                Log.d(
+                    "js调用android2yy", SharedPreferencesUtils
+                        .init(this@MainActivity).getValue("phone")
+                )
+                Log.d(
+                    "js调用android2yy3", SharedPreferencesUtils
+                        .init(this@MainActivity).getValue("username")
+                )
+            }
+        }
+
+        @JavascriptInterface
+        @Throws(JSONException::class)
+        fun doSyncWithReturn(args: Any?, handler: CompletionHandler<String>) {
+            Log.d("js调用android3", args.toString())
+            val jsonObject = JSONObject(args.toString())
+            val type = jsonObject.getString("type")
+            val requestParamsData = jsonObject.getString("requestParamsData")
+            if (type == "getHttpHeaderJson") {
+                val hashMapOf = hashMapOf<String, String>()
+                val token=if(!TextUtils.isEmpty(SharedPreferencesUtils
+                        .init(this@MainActivity).getValue("token"))) SharedPreferencesUtils.init(this@MainActivity).getValue("token") else MyAppclication.xAuthToken
+                hashMapOf.put("x-auth-token",token)
+                hashMapOf.put("x-merchant", MyAppclication.xMerchan)
+                hashMapOf.put("x-version", MyAppclication.xVersion)
+                hashMapOf.put("adid", MyAppclication.adid)
+                hashMapOf.put("app-name", MyAppclication.appName)
+                hashMapOf.put("x-package-name", MyAppclication.xPackageName)
+
+                val data = JSONObject(hashMapOf as Map<*, *>)
+
+                val jsResponse = JSResponse(1, data.toString())
+                val gson = Gson()
+                val toJson = gson.toJson(jsResponse)
+                Log.d("js调用android3", toJson)
+                handler.complete(toJson)
+
+            } else if (type == "getUuid") {
+                val uuid: String = UUID.randomUUID().toString()
+                handler.complete(CommonUtils.getObjectToString(uuid))
+            } else if (type == "getLogo") {
+                handler.complete(CommonUtils.getObjectToString(CommonUtils.getLogoToString(this@MainActivity)))
+            }else if (type=="getSp"){
+                val value = SharedPreferencesUtils.init(this@MainActivity).getValue(requestParamsData)
+                handler.complete(CommonUtils.getObjectToString(value))
+            }else if (type=="getCurrentServerAddress"){
+                handler.complete(CommonUtils.getObjectToString(url?:""))
             }
 
-            override fun onGeolocationPermissionsShowPrompt(
-                origin: String,
-                callback: GeolocationPermissions.Callback
-            ) {
-                // 这里是处理是否同意定位权限，可以在这里写一个 AlertDialog 来模仿浏览器弹出来的定位权限申请。
-                //public void invoke(String origin, boolean allow, boolean retain);
-                callback.invoke(origin, true, false)
-                super.onGeolocationPermissionsShowPrompt(origin, callback)
-            }
+        }
 
-            override fun onProgressChanged(view: WebView, newProgress: Int) {
-//                if (newProgress == 100) {
-//                    binding.progressBar.setVisibility(View.GONE)
-//                    hide()
-//                } else {
-//                    if (!binding.progressBar.isShown()) {
-//                        binding.progressBar.setVisibility(View.GONE)
-//                    }
-//                    binding.progressBar.setProgress(newProgress)
-//                }
-                super.onProgressChanged(view, newProgress)
-            }
-
-            override fun onShowFileChooser(
-                webView: WebView,
-                filePathCallback: ValueCallback<Array<Uri>>,
-                fileChooserParams: FileChooserParams
-            ): Boolean {
-
-                return true
-            }
-        })
-
-    }
- inner class MyJavascriptInterface(){
-     @JavascriptInterface
-     @Throws(JSONException::class)
-     fun doSync(args: Any?): Any? {
-         Log.d("js调用android1", args.toString())
-         return args
-     }
-     @JavascriptInterface
-     @Throws(JSONException::class)
-     fun syncSave(args: Any?): Any? {
-         Log.d("js调用android2", args.toString())
-         return args
-     }
-     @JavascriptInterface
-     @Throws(JSONException::class)
-     fun doSyncWithReturn(args: Any?): Any? {
-         Log.d("js调用android3", args.toString())
-         val jsonObject = JSONObject(args.toString())
-         val type = jsonObject.getString("type")
-         if(type=="getHttpHeaderJson"){
-             val hashMapOf = hashMapOf<String, String>()
-             hashMapOf.put("x-auth-token",MyAppclication.xAuthToken)
-             hashMapOf.put("x-merchant",MyAppclication.xMerchan)
-             hashMapOf.put("x-version",MyAppclication.xVersion)
-             hashMapOf.put("adid",MyAppclication.adid)
-             hashMapOf.put("app-name",MyAppclication.appName)
-             hashMapOf.put("x-package-name",MyAppclication.xPackageName)
-
-             val data = JSONObject(hashMapOf as Map<*, *>)
-             Log.d("js调用android3ccff", data.toString())
-             val jsResponse=JSResponse(1,data.toString())
-             val gson = Gson()
-             val toJson = gson.toJson(jsResponse)
-             Log.d("js调用android3ccff22",toJson.replace("\\",""))
-             webView.callHandler(
-                 "getHttpHeaderJson",
-                 arrayOf<String>(toJson.replace("\\","")),
-                 object : OnReturnValue<String>{
-                     override fun onValue(retValue: String?) {
-                         Log.d("js调用androidffcff", retValue.toString())
-                     }
-
-                 }
-             )
-         }
-         return args
-     }
-     @JavascriptInterface
-     @Throws(JSONException::class)
-     fun doIdentityWithReturnMatch(args: Any?): Any? {
-         Log.d("js调用android4", args.toString())
-         return args
-     }
+        @JavascriptInterface
+        @Throws(JSONException::class)
+        fun doIdentityWithReturnMatch(args: Any?): Any? {
+            Log.d("js调用android4", args.toString())
+            return args
+        }
 
 //     @JavascriptInterface
 //     fun asyn(args: Any?, handler: CompletionHandler<String>) {
@@ -173,11 +171,13 @@ class MainActivity : BaseActivity() {
 //         handler.complete(args as String?)
 //     }
 
- }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
     }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
             // 返回上一页面
@@ -187,4 +187,8 @@ class MainActivity : BaseActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
+}
+
+inline fun <reified T : Any> Gson.fromJson(json: String): T {
+    return Gson().fromJson(json, T::class.java)
 }
