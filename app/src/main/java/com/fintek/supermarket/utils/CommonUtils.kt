@@ -3,7 +3,6 @@ package com.fintek.supermarket.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
 import android.util.Base64
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
@@ -14,6 +13,13 @@ import java.util.*
 
 
 object CommonUtils {
+
+    fun getBitmapToBase64(bitmap: Bitmap): String {
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val b = baos.toByteArray()
+        return Base64.encodeToString(b, Base64.DEFAULT)
+    }
 
     fun getLogoToString(context: Context): String {
         val byteArrayOutputStream = ByteArrayOutputStream()

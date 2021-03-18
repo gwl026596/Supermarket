@@ -42,5 +42,9 @@ public interface HttpService {
     @POST("api/auth/pre-liveness")
     Call<HttpResource<LivenessIdResponse>> uoloadLiveness(@Query("livenessId") String livenessId);
 
+    //ocr信息认证(advance)
+    @POST("api/auth/ocr-advance")
+    Call<HttpResource<String>> uoloadOcrAdvance(@Query("base64Img") String base64Img);
+
 
 }

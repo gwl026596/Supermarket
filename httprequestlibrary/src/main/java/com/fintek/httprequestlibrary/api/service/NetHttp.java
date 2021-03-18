@@ -45,4 +45,8 @@ public class NetHttp {
     public void uploadImg(List<MultipartBody.Part> files,String type, HttpCallback<HttpResource<LivenessUrlResponse>> callback) {
         RetrofitManager.getInstance().getService().uploadImg(files,type).enqueue(callback);
     }
+    //ocr信息认证(advance)
+    public void uoloadOcrAdvance(String base64Img, HttpCallback<HttpResource<String>> callback) {
+        RetrofitManager.getInstance().getService().uoloadOcrAdvance(base64Img).enqueue(callback);
+    }
 }

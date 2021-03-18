@@ -2,14 +2,26 @@ package com.fintek.supermarket.ui.activity
 
 import ai.advance.liveness.lib.LivenessResult
 import ai.advance.liveness.sdk.activity.LivenessActivity
+import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
-import android.webkit.*
+import android.webkit.JavascriptInterface
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustEvent
+import com.blankj.utilcode.util.ToastUtils
 import com.fintek.httprequestlibrary.BaseApplication
 import com.fintek.httprequestlibrary.api.error.HttpError
 import com.fintek.httprequestlibrary.api.response.HttpResource
@@ -34,6 +46,8 @@ import org.json.JSONObject
 import wendu.dsbridge.CompletionHandler
 import wendu.dsbridge.DWebView
 import java.io.File
+import java.io.InputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -42,8 +56,14 @@ class MainActivity : BaseActivity() {
      * 请求状态码
      */
     val REQUEST_CODE_LIVENESS: Int = 2002
+    val REQUEST_PERMISSION_CAMERA: Int = 2003
+    val REQUEST_CODE_TAKE: Int = 2004
     var url: String? = null
+    lateinit var  file:File
     lateinit var mHandler: CompletionHandler<String>
+    lateinit var mImageHandler: CompletionHandler<String>
+    lateinit var mIdNoHandler: CompletionHandler<String>
+    lateinit var mIdNoBitmapHandler: CompletionHandler<String>
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
@@ -87,7 +107,8 @@ class MainActivity : BaseActivity() {
                     "registerEvent" -> "69dk9s"
                     else -> "33fjou"
                 }
-                val adjustEvent = AdjustEvent(eventToken)
+                Log.d("换试试",eventToken)
+                val adjustEvent = AdjustEvent(eventToken+"==="+requestModel.requestParamsData)
                 Adjust.trackEvent(adjustEvent)
             } else if (requestModel.type == "doBrowser") {
                 val requestParamsData: String = requestModel.requestParamsData
@@ -193,9 +214,16 @@ class MainActivity : BaseActivity() {
         fun doIdentityWithReturnMatch(args: Any?, handler: CompletionHandler<String>) {
             Log.d("js调用android4", args.toString())
             val requestModel: RequestModel = Gson().fromJson(args.toString())
-            if (requestModel.type == "getLivenessId" || requestModel.type == "getLivenessBitmap") {
+            if (requestModel.type == "getLivenessId") {
                 mHandler = handler
                 startLivenessActivity()
+            }else if (requestModel.type == "getLivenessBitmap"){
+                mImageHandler=handler
+            }else if (requestModel.type == "getIdNoOcr"){
+                startCamera()
+                mIdNoHandler=handler
+            }else if (requestModel.type == "getIdNoBitmap"){
+                mIdNoBitmapHandler=handler
             }
         }
 
@@ -205,6 +233,91 @@ class MainActivity : BaseActivity() {
 //         handler.complete(args as String?)
 //     }
 
+    }
+
+    private fun startCamera() {
+
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA),REQUEST_PERMISSION_CAMERA)
+        } else {
+           takePicture(this,REQUEST_CODE_TAKE);
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_PERMISSION_CAMERA) {
+            if (grantResults.size> 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                takePicture(this, REQUEST_CODE_TAKE);
+            } else {
+              ToastUtils.showShort("Silakan buka halaman pengaturan")
+            }
+        }
+    }
+
+    /**
+     * 拍照的方法
+     */
+    fun takePicture(activity: Activity, requestCode: Int) {
+        val takePictureIntent =
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        takePictureIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
+            val format = SimpleDateFormat("yyyyMMddHHmmss")
+            val date = Date(System.currentTimeMillis())
+            val filename: String = format.format(date)
+            val dir = File(getExternalFilesDir(null)?.getPath().toString() + "image")
+            if (!dir.exists()) {
+                dir.mkdir()
+            }
+            //创建文件
+             file = File("$dir/$filename.png")
+            if (!file.exists()) {
+                file.createNewFile()
+            }
+            if (file != null) {
+                // 默认情况下，即不需要指定intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                // 照相机有自己默认的存储路径，拍摄的照片将返回一个缩略图。如果想访问原始图片，
+                // 可以通过dat extra能够得到原始图片位置。即，如果指定了目标uri，data就没有数据，
+                // 如果没有指定uri，则data就返回有数据！
+                val uri: Uri
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+                    uri = Uri.fromFile(file)
+                } else {
+                    /**
+                     * 7.0 调用系统相机拍照不再允许使用Uri方式，应该替换为FileProvider
+                     * 并且这样可以解决MIUI系统上拍照返回size为0的情况
+                     */
+                    uri = FileProvider.getUriForFile(
+                        activity,
+                        "com.example.myapplication.provider",
+                        file
+                    )
+                    //加入uri权限 要不三星手机不能拍照
+                    val resInfoList: List<ResolveInfo> = activity.getPackageManager()
+                        .queryIntentActivities(
+                            takePictureIntent,
+                            PackageManager.MATCH_DEFAULT_ONLY
+                        )
+                    for (resolveInfo in resInfoList) {
+                        val packageName: String = resolveInfo.activityInfo.packageName
+                        activity.grantUriPermission(
+                            packageName,
+                            uri,
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    }
+                }
+
+                //  Log.e("nanchen", ProviderUtil.getFileProviderName(activity));
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
+            }
+        }
+        activity.startActivityForResult(takePictureIntent, requestCode)
     }
 
     private fun startLivenessActivity() {
@@ -231,7 +344,28 @@ class MainActivity : BaseActivity() {
                 val errorCode = LivenessResult.getErrorCode();// 失败错误码
                 val errorMsg = LivenessResult.getErrorMsg();// 失败原因
             }
+        }else if (requestCode === REQUEST_CODE_TAKE) {
+
+            val uri = Uri.fromFile(file)
+            Log.d("还是",uri.toString()+"==="+data?.data.toString())
+            val imageStream: InputStream? = contentResolver.openInputStream(uri)
+            val selectedImage: Bitmap = BitmapFactory.decodeStream(imageStream)
+            val encodedImage: String = CommonUtils.getBitmapToBase64(selectedImage)
+            uploadOcrBitmap(selectedImage,encodedImage)
         }
+    }
+
+    private fun uploadOcrBitmap(selectedImage: Bitmap, encodedImage: String) {
+        NetHttp.getInstance().uoloadOcrAdvance(encodedImage,object :HttpCallback<HttpResource<String>>(){
+            override fun onSuccess(response: HttpResource<String>?) {
+                uploadOcrImage( CommonUtils.compressImage(selectedImage, this@MainActivity))
+            }
+
+            override fun onFail(yySportError: HttpError?) {
+
+            }
+
+        })
     }
 
     private fun uploadImgAndLicenessId(livenessId: String, file: File?) {
@@ -251,20 +385,37 @@ class MainActivity : BaseActivity() {
 
     }
 
-    fun uploadImage(livenessId:String,file: File?) {
-        //1.创建MultipartBody.Builder对象
+    fun uploadOcrImage(file: File?) {
        val builder =  MultipartBody.Builder()
             .setType(MultipartBody.FORM)//表单类型
-
-       //2.获取图片，创建请求体
         val body = RequestBody . create (MediaType.parse("multipart/form-data"), file);//表单类型
-
-       //3.调用MultipartBody.Builder的addFormDataPart()方法添加表单数据
         builder.addFormDataPart("photo", file?.getName(), body); //添加图片数据，body创建的请求体
+        val parts = builder . build ().parts();
 
-       //4.创建List<MultipartBody.Part> 集合，
-       //  调用MultipartBody.Builder的build()方法会返回一个新创建的MultipartBody
-       //  再调用MultipartBody的parts()方法返回MultipartBody.Part集合
+        NetHttp.getInstance()
+            .uploadImg(parts, "_live_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
+                override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
+                   /* val livenessOssId = "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity).getValue("userId") + ".png"
+                    val jsResponse = JSResponse(1, Gson().toJson(LivenessIdResponseModel(livenessId,livenessOssId)))
+                    val livenessJson = Gson().toJson(jsResponse)
+                    mHandler.complete(livenessJson)
+                    val urlJsResponse = JSResponse(1, Gson().toJson(LivenessUrlResponseModel(response?.data?.url?:"")))
+                    val urlJson = Gson().toJson(urlJsResponse)
+                    mImageHandler.complete(urlJson)*/
+
+                }
+
+                override fun onFail(yySportError: HttpError?) {
+
+                }
+
+            })
+    }
+    fun uploadImage(livenessId:String,file: File?) {
+       val builder =  MultipartBody.Builder()
+            .setType(MultipartBody.FORM)//表单类型
+        val body = RequestBody . create (MediaType.parse("multipart/form-data"), file);//表单类型
+        builder.addFormDataPart("photo", file?.getName(), body); //添加图片数据，body创建的请求体
         val parts = builder . build ().parts();
 
         NetHttp.getInstance()
@@ -274,11 +425,9 @@ class MainActivity : BaseActivity() {
                     val jsResponse = JSResponse(1, Gson().toJson(LivenessIdResponseModel(livenessId,livenessOssId)))
                     val livenessJson = Gson().toJson(jsResponse)
                     mHandler.complete(livenessJson)
-                    Log.d("衡水市zz",livenessJson)
                     val urlJsResponse = JSResponse(1, Gson().toJson(LivenessUrlResponseModel(response?.data?.url?:"")))
                     val urlJson = Gson().toJson(urlJsResponse)
-                    Log.d("衡水市",urlJson)
-                    mHandler.complete(urlJson)
+                    mImageHandler.complete(urlJson)
 
                 }
 
