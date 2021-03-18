@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
 }
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 30
@@ -57,4 +58,9 @@ dependencies {
     api 'com.squareup.okhttp3:logging-interceptor:3.10.0'
 
     api 'com.blankj:utilcodex:1.29.0'
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }

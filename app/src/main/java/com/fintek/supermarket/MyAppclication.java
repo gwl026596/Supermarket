@@ -11,9 +11,13 @@ import androidx.annotation.Nullable;
 import com.adjust.sdk.Adjust;
 import com.adjust.sdk.AdjustConfig;
 import com.adjust.sdk.LogLevel;
+import com.fintek.httprequestlibrary.BaseApplication;
 
-public class MyAppclication extends Application {
-    public static String xAuthToken="";
+import ai.advance.liveness.lib.GuardianLivenessDetectionSDK;
+import ai.advance.liveness.lib.Market;
+
+public class MyAppclication extends BaseApplication {
+
     public static String xMerchan="fintek-loan-supermarket";
     public static String xVersion=BuildConfig.VERSION_NAME;
     public static String adid="";
@@ -29,6 +33,9 @@ public class MyAppclication extends Application {
         config.setLogLevel(LogLevel.VERBOSE);
         Adjust.onCreate(config);
         registerActivityLifecycleCallbacks(new AdjustLifecycleCallbacks());
+
+        GuardianLivenessDetectionSDK.init(this, "60e345c88498fc24","fd91c16b243116a4", Market.Indonesia);
+        GuardianLivenessDetectionSDK.letSDKHandleCameraPermission();
     }
     private static final class AdjustLifecycleCallbacks implements ActivityLifecycleCallbacks {
         @Override

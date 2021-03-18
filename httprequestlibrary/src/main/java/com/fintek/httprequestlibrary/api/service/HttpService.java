@@ -1,6 +1,8 @@
 package com.fintek.httprequestlibrary.api.service;
 
 import com.fintek.httprequestlibrary.api.response.HttpResource;
+import com.fintek.httprequestlibrary.api.response.LivenessIdResponse;
+import com.fintek.httprequestlibrary.api.response.LivenessUrlResponse;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -32,8 +34,13 @@ public interface HttpService {
     @POST("api/index/current-html-version")
     Call<HttpResource<String>> getH5Version();
 
+    @Multipart
+    @POST("api/common/oss-upload")
+    Call<HttpResource<LivenessUrlResponse>> uploadImg(@Part() List<MultipartBody.Part> files , @Query("type") String type);
 
-
+    //活体检测预处理
+    @POST("api/auth/pre-liveness")
+    Call<HttpResource<LivenessIdResponse>> uoloadLiveness(@Query("livenessId") String livenessId);
 
 
 }

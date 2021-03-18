@@ -17,6 +17,16 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
+        ndk {
+            abiFilters "armeabi","arm64-v8a","x86"
+        }
+    }
+
+    repositories {
+        flatDir {
+            dirs project(':liveness').file('libs')
+        }
     }
 
     buildTypes {
@@ -61,6 +71,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation project(path: ':httprequestlibrary')
+    implementation project(path: ':liveness')
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.3'
     testImplementation 'junit:junit:4.+'

@@ -31,7 +31,7 @@ public abstract class HttpCallback<T> implements Callback<T> {
     @Override
     public void onResponse(Call<T> call, Response<T> response) {
         if (Constant.RESPONSE_CODE == response.code()) {
-            if (((HttpResource) response.body()).getCode()==Constant.SUCEESS_CODE) {
+            if (((HttpResource) response.body()).getCode().equals(Constant.SUCEESS_CODE)) {
                 onSuccess(response.body());
             } else {
                 //不是统一错误码，把错误码交给回调处理
