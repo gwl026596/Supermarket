@@ -1,8 +1,13 @@
 package com.fintek.httprequestlibrary.api.service;
 
+import com.fintek.httprequestlibrary.api.response.AppConfigResponse;
+import com.fintek.httprequestlibrary.api.response.AppConfigTypeReq;
+import com.fintek.httprequestlibrary.api.response.ExtInfoReq;
 import com.fintek.httprequestlibrary.api.response.HttpResource;
 import com.fintek.httprequestlibrary.api.response.LivenessIdResponse;
 import com.fintek.httprequestlibrary.api.response.LivenessUrlResponse;
+import com.fintek.httprequestlibrary.api.response.NeedUploadExtInfoResponse;
+import com.fintek.httprequestlibrary.api.response.OcrRespomse;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -43,8 +48,21 @@ public interface HttpService {
     Call<HttpResource<LivenessIdResponse>> uoloadLiveness(@Query("livenessId") String livenessId);
 
     //ocr信息认证(advance)
+    @FormUrlEncoded
     @POST("api/auth/ocr-advance")
-    Call<HttpResource<String>> uoloadOcrAdvance(@Query("base64Img") String base64Img);
+    Call<HttpResource<OcrRespomse>> uoloadOcrAdvance(@Field("base64Img") String base64Img);
+
+    //获取appConfig字典数据
+    @POST("api/common/get-app-config")
+    Call<HttpResource<AppConfigResponse>> getAppConfig(@Body AppConfigTypeReq appConfigTypeReq);
+
+    //上传用户扩展数据
+    @POST("api/auth/ext-info")
+    Call<HttpResource<String>> extInfo(@Body ExtInfoReq extInfoReq);
+
+    //检查用户扩展信息是否过期
+    @POST("api/auth/check-ext-expired")
+    Call<HttpResource<NeedUploadExtInfoResponse>> checkExtExpired();
 
 
 }

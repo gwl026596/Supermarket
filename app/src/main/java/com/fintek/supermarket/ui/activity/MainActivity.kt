@@ -3,30 +3,29 @@ package com.fintek.supermarket.ui.activity
 import ai.advance.liveness.lib.LivenessResult
 import ai.advance.liveness.sdk.activity.LivenessActivity
 import android.Manifest
-import android.app.Activity
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
+import android.os.Environment
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
 import android.webkit.JavascriptInterface
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustEvent
 import com.blankj.utilcode.util.ToastUtils
 import com.fintek.httprequestlibrary.BaseApplication
 import com.fintek.httprequestlibrary.api.error.HttpError
-import com.fintek.httprequestlibrary.api.response.HttpResource
-import com.fintek.httprequestlibrary.api.response.LivenessIdResponse
-import com.fintek.httprequestlibrary.api.response.LivenessUrlResponse
+import com.fintek.httprequestlibrary.api.response.*
 import com.fintek.httprequestlibrary.api.service.HttpCallback
 import com.fintek.httprequestlibrary.api.service.NetHttp
 import com.fintek.supermarket.BuildConfig
@@ -46,7 +45,7 @@ import org.json.JSONObject
 import wendu.dsbridge.CompletionHandler
 import wendu.dsbridge.DWebView
 import java.io.File
-import java.io.InputStream
+import java.io.FileNotFoundException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -58,12 +57,18 @@ class MainActivity : BaseActivity() {
     val REQUEST_CODE_LIVENESS: Int = 2002
     val REQUEST_PERMISSION_CAMERA: Int = 2003
     val REQUEST_CODE_TAKE: Int = 2004
+    val CROP_PICTURE: Int = 2005
+    val REQUEST_PERMISSION_READ_CONTACTS: Int = 2005
+    val REQUEST_CONTACT_CODE: Int = 2006
     var url: String? = null
-    lateinit var  file:File
+    private val IMAGE_FILE_LOCATION =
+        "file:///" + Environment.getExternalStorageDirectory().getPath() + "/temp.jpg"
+    private val imageUri = Uri.parse(IMAGE_FILE_LOCATION)
     lateinit var mHandler: CompletionHandler<String>
     lateinit var mImageHandler: CompletionHandler<String>
     lateinit var mIdNoHandler: CompletionHandler<String>
     lateinit var mIdNoBitmapHandler: CompletionHandler<String>
+    lateinit var mContractHandler: CompletionHandler<String>
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
@@ -102,13 +107,14 @@ class MainActivity : BaseActivity() {
             Log.d("js调用android1", args.toString())
             val requestModel: RequestModel = Gson().fromJson(args.toString())
             if (requestModel.type == "appEvent") {
-                val eventToken = when (requestModel.requestParamsData) {
+                Log.d("换试试", requestModel.requestParamsData.replace("\"", ""))
+                val eventToken = when (requestModel.requestParamsData.replace("\"", "")) {
                     "applyEvent" -> "fcx4vl"
                     "registerEvent" -> "69dk9s"
                     else -> "33fjou"
                 }
-                Log.d("换试试",eventToken)
-                val adjustEvent = AdjustEvent(eventToken+"==="+requestModel.requestParamsData)
+                Log.d("换试试", eventToken)
+                val adjustEvent = AdjustEvent(eventToken)
                 Adjust.trackEvent(adjustEvent)
             } else if (requestModel.type == "doBrowser") {
                 val requestParamsData: String = requestModel.requestParamsData
@@ -205,6 +211,9 @@ class MainActivity : BaseActivity() {
                 handler.complete(CommonUtils.getObjectToString(value))
             } else if (type == "getCurrentServerAddress") {
                 handler.complete(CommonUtils.getObjectToString(url ?: ""))
+            } else if (type == "getContract") {
+                mContractHandler = handler
+                getAppConfig()
             }
 
         }
@@ -217,13 +226,13 @@ class MainActivity : BaseActivity() {
             if (requestModel.type == "getLivenessId") {
                 mHandler = handler
                 startLivenessActivity()
-            }else if (requestModel.type == "getLivenessBitmap"){
-                mImageHandler=handler
-            }else if (requestModel.type == "getIdNoOcr"){
+            } else if (requestModel.type == "getLivenessBitmap") {
+                mImageHandler = handler
+            } else if (requestModel.type == "getIdNoOcr") {
                 startCamera()
-                mIdNoHandler=handler
-            }else if (requestModel.type == "getIdNoBitmap"){
-                mIdNoBitmapHandler=handler
+                mIdNoHandler = handler
+            } else if (requestModel.type == "getIdNoBitmap") {
+                mIdNoBitmapHandler = handler
             }
         }
 
@@ -235,13 +244,41 @@ class MainActivity : BaseActivity() {
 
     }
 
-    private fun startCamera() {
+    private fun getAppConfig() {
 
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA),REQUEST_PERMISSION_CAMERA)
-        } else {
-           takePicture(this,REQUEST_CODE_TAKE);
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_CONTACTS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                startGetAppConfig()
+            } else {
+                readContacts()
+            }
+
+    }
+
+    private fun startCamera() {
+        val permissions = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    permissions,
+                    REQUEST_PERMISSION_CAMERA
+                )
+            } else {
+                takePhoto()
+            }
         }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -251,73 +288,93 @@ class MainActivity : BaseActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSION_CAMERA) {
-            if (grantResults.size> 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                takePicture(this, REQUEST_CODE_TAKE);
+            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                takePhoto()
             } else {
-              ToastUtils.showShort("Silakan buka halaman pengaturan")
+                ToastUtils.showShort("Silakan buka halaman pengaturan")
+            }
+        }else if (requestCode ==REQUEST_PERMISSION_READ_CONTACTS){
+            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                readContacts()
+            } else {
+                ToastUtils.showShort("Silakan buka halaman pengaturan")
             }
         }
     }
 
-    /**
-     * 拍照的方法
-     */
-    fun takePicture(activity: Activity, requestCode: Int) {
-        val takePictureIntent =
-            Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        takePictureIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
-            val format = SimpleDateFormat("yyyyMMddHHmmss")
-            val date = Date(System.currentTimeMillis())
-            val filename: String = format.format(date)
-            val dir = File(getExternalFilesDir(null)?.getPath().toString() + "image")
-            if (!dir.exists()) {
-                dir.mkdir()
-            }
-            //创建文件
-             file = File("$dir/$filename.png")
-            if (!file.exists()) {
-                file.createNewFile()
-            }
-            if (file != null) {
-                // 默认情况下，即不需要指定intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                // 照相机有自己默认的存储路径，拍摄的照片将返回一个缩略图。如果想访问原始图片，
-                // 可以通过dat extra能够得到原始图片位置。即，如果指定了目标uri，data就没有数据，
-                // 如果没有指定uri，则data就返回有数据！
-                val uri: Uri
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    uri = Uri.fromFile(file)
-                } else {
-                    /**
-                     * 7.0 调用系统相机拍照不再允许使用Uri方式，应该替换为FileProvider
-                     * 并且这样可以解决MIUI系统上拍照返回size为0的情况
-                     */
-                    uri = FileProvider.getUriForFile(
-                        activity,
-                        "com.example.myapplication.provider",
-                        file
-                    )
-                    //加入uri权限 要不三星手机不能拍照
-                    val resInfoList: List<ResolveInfo> = activity.getPackageManager()
-                        .queryIntentActivities(
-                            takePictureIntent,
-                            PackageManager.MATCH_DEFAULT_ONLY
-                        )
-                    for (resolveInfo in resInfoList) {
-                        val packageName: String = resolveInfo.activityInfo.packageName
-                        activity.grantUriPermission(
-                            packageName,
-                            uri,
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
+    fun startGetAppConfig(){
+        val permissions = arrayOf(
+            Manifest.permission.READ_CONTACTS,
+        )
+        val list = mutableListOf<String>()
+        list.add("alert_flag")
+        list.add("alert_content")
+        val appConfigTypeReq = AppConfigTypeReq(list)
+        NetHttp.getInstance().getAppConfig(appConfigTypeReq,
+            object : HttpCallback<HttpResource<AppConfigResponse>>() {
+                override fun onSuccess(response: HttpResource<AppConfigResponse>?) {
+                    response?.data?.let {
+                        if (it.alert_flag){
+                            AlertDialog.Builder(this@MainActivity)
+                                .setMessage(it.alert_content)
+                                .setPositiveButton("Setuju",object :DialogInterface.OnClickListener{
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                        ActivityCompat.requestPermissions(
+                                            this@MainActivity,
+                                            permissions,
+                                            REQUEST_PERMISSION_READ_CONTACTS
+                                        )
+                                    }
+
+                                }).setNegativeButton("Batalkan",object :DialogInterface.OnClickListener{
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+
+                                    }
+
+                                }).show()
+                        }
                     }
+
                 }
 
-                //  Log.e("nanchen", ProviderUtil.getFileProviderName(activity));
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
-            }
-        }
-        activity.startActivityForResult(takePictureIntent, requestCode)
+                override fun onFail(yySportError: HttpError?) {
+                }
+
+            })
+    }
+
+    /**
+     * 启动系相机
+     */
+    private fun takePhoto() {
+        val intent =
+            Intent("android.media.action.IMAGE_CAPTURE")
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+        //启动相机（带返回结果）
+        startActivityForResult(intent, REQUEST_CODE_TAKE)
+    }
+
+
+    /**
+     * 设置裁剪参数，开始裁剪
+     * @param uri
+     */
+    fun startPhotoZoom(uri: Uri?) {
+        val intent =
+            Intent("com.android.camera.action.CROP")
+        intent.setDataAndType(uri, "image/*")
+        // 下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
+        intent.putExtra("crop", "true")
+        intent.putExtra("scale", true)
+        intent.putExtra("aspectX", 2) //裁剪框 X 比值
+        intent.putExtra("aspectY", 1) //裁剪框 Y 比值
+        intent.putExtra("outputX", 600) //裁剪后输出宽度
+        intent.putExtra("outputY", 300) //裁剪后输出高度
+        intent.putExtra("return-data", false)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri) //输出路径
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString())
+        intent.putExtra("noFaceDetection", true) // no face detection
+        startActivityForResult(intent, CROP_PICTURE)
     }
 
     private fun startLivenessActivity() {
@@ -330,35 +387,90 @@ class MainActivity : BaseActivity() {
      */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_LIVENESS) {
-            if (LivenessResult.isSuccess()) {// 活体检测成功
-                val livenessId = LivenessResult.getLivenessId();// 本次活体id
-                val bitmap = LivenessResult.getLivenessBitmap();// 本次活体图片
-                Log.d("jszzz", livenessId + "==" + bitmap)
-                uploadImgAndLicenessId(
-                    livenessId,
-                    CommonUtils.compressImage(bitmap, this@MainActivity)
-                )
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_CODE_LIVENESS) {
+                if (LivenessResult.isSuccess()) {// 活体检测成功
+                    val livenessId = LivenessResult.getLivenessId();// 本次活体id
+                    val bitmap = LivenessResult.getLivenessBitmap();// 本次活体图片
+                    val bitmaps = LivenessResult.getLivenessBase64Str();// 本次活体图片
+                    Log.d("jszzz", livenessId + "==" + bitmaps)
+                    uploadImgAndLicenessId(
+                        livenessId,
+                        CommonUtils.compressImage(bitmap, this@MainActivity)
+                    )
 
-            } else {// 活体检测失败
-                val errorCode = LivenessResult.getErrorCode();// 失败错误码
-                val errorMsg = LivenessResult.getErrorMsg();// 失败原因
+                } else {// 活体检测失败
+                    val errorCode = LivenessResult.getErrorCode();// 失败错误码
+                    val errorMsg = LivenessResult.getErrorMsg();// 失败原因
+                }
+            } else if (requestCode === REQUEST_CODE_TAKE) {
+                startPhotoZoom(imageUri);
+            } else if (requestCode === CROP_PICTURE) { // 取得裁剪后的图片
+                try {
+                    val selectedImage: Bitmap =
+                        BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri))
+                    getContentResolver().openInputStream(imageUri)?.let {
+                        val bitmapToBase64 = CommonUtils.imageToBase64(it)
+                        uploadOcrBitmap(selectedImage, bitmapToBase64 ?: "")
+                    }
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace();
+                }
+            }else if (requestCode == REQUEST_CONTACT_CODE) {
+
+                try {
+                    if (data != null) {
+                        val uri = data.getData();
+                        lateinit var phoneNum:String;
+                        lateinit var contactName:String;
+                        // 创建内容解析者
+                        val contentResolver = getContentResolver();
+                        var cursor:Cursor? = null;
+                        if (uri != null) {
+                            cursor = contentResolver.query(uri, arrayOf("display_name", "data1"), null, null, null);
+                        }
+                        while (cursor!!.moveToNext()) {
+                            contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                            phoneNum = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                        }
+                        cursor.close();
+                        phoneNum = phoneNum.replace("-", " ");
+                        phoneNum = phoneNum.replace(" ", "");
+                        Log.d("口口声声",contactName+"=="+phoneNum)
+                        val cutName= if (contactName.length>20) contactName.substring(0,20) else contactName
+                        val urlJsResponse = JSResponse(
+                            1,
+                            Gson().toJson(ContractResponseModel(contactName,phoneNum,cutName))
+                        )
+                        val urlJson = Gson().toJson(urlJsResponse)
+                        mContractHandler.complete(urlJson)
+                    } else {
+                        ToastUtils.showShort("silahkan pilih lagi~")
+                    }
+
+                }catch (e:Exception ){
+                    ToastUtils.showShort("silahkan pilih lagi~")
+                }
+
+
             }
-        }else if (requestCode === REQUEST_CODE_TAKE) {
-
-            val uri = Uri.fromFile(file)
-            Log.d("还是",uri.toString()+"==="+data?.data.toString())
-            val imageStream: InputStream? = contentResolver.openInputStream(uri)
-            val selectedImage: Bitmap = BitmapFactory.decodeStream(imageStream)
-            val encodedImage: String = CommonUtils.getBitmapToBase64(selectedImage)
-            uploadOcrBitmap(selectedImage,encodedImage)
         }
     }
 
-    private fun uploadOcrBitmap(selectedImage: Bitmap, encodedImage: String) {
-        NetHttp.getInstance().uoloadOcrAdvance(encodedImage,object :HttpCallback<HttpResource<String>>(){
-            override fun onSuccess(response: HttpResource<String>?) {
-                uploadOcrImage( CommonUtils.compressImage(selectedImage, this@MainActivity))
+    //调用并获取联系人信息
+    private fun readContacts() {
+        checkExtExpired()
+        val intent =  Intent();
+        intent.setAction("android.intent.action.PICK");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.setType("vnd.android.cursor.dir/phone_v2");
+        startActivityForResult(intent, REQUEST_CONTACT_CODE);
+    }
+
+    private fun checkExtExpired() {
+        NetHttp.getInstance().checkExtExpired(object :HttpCallback<HttpResource<NeedUploadExtInfoResponse>>(){
+            override fun onSuccess(response: HttpResource<NeedUploadExtInfoResponse>?) {
+
             }
 
             override fun onFail(yySportError: HttpError?) {
@@ -368,12 +480,32 @@ class MainActivity : BaseActivity() {
         })
     }
 
+    private fun uploadOcrBitmap(selectedImage: Bitmap, encodedImage: String) {
+        Log.d("base64", encodedImage)
+        NetHttp.getInstance()
+            .uoloadOcrAdvance(
+                encodedImage.substring(0, encodedImage.length - 100),
+                object : HttpCallback<HttpResource<OcrRespomse>>() {
+                    override fun onSuccess(response: HttpResource<OcrRespomse>?) {
+                        uploadOcrImage(
+                            response?.data,
+                            CommonUtils.compressImage(selectedImage, this@MainActivity)
+                        )
+                    }
+
+                    override fun onFail(yySportError: HttpError?) {
+
+                    }
+
+                })
+    }
+
     private fun uploadImgAndLicenessId(livenessId: String, file: File?) {
         NetHttp.getInstance()
             .uoloadLiveness(livenessId, object : HttpCallback<HttpResource<LivenessIdResponse>>() {
                 override fun onSuccess(response: HttpResource<LivenessIdResponse>?) {
                     Log.d("js调用android4", response?.data?.livenessId ?: "" + "===" + mHandler)
-                    uploadImage(livenessId,file)
+                    uploadImage(livenessId, file)
                 }
 
                 override fun onFail(yySportError: HttpError?) {
@@ -385,23 +517,35 @@ class MainActivity : BaseActivity() {
 
     }
 
-    fun uploadOcrImage(file: File?) {
-       val builder =  MultipartBody.Builder()
+    fun uploadOcrImage(ocrRespomse: OcrRespomse?, file: File?) {
+        val builder = MultipartBody.Builder()
             .setType(MultipartBody.FORM)//表单类型
-        val body = RequestBody . create (MediaType.parse("multipart/form-data"), file);//表单类型
+        val body = RequestBody.create(MediaType.parse("multipart/form-data"), file);//表单类型
         builder.addFormDataPart("photo", file?.getName(), body); //添加图片数据，body创建的请求体
-        val parts = builder . build ().parts();
+        val parts = builder.build().parts();
 
         NetHttp.getInstance()
-            .uploadImg(parts, "_live_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
+            .uploadImg(parts, "_ocr_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
-                   /* val livenessOssId = "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity).getValue("userId") + ".png"
-                    val jsResponse = JSResponse(1, Gson().toJson(LivenessIdResponseModel(livenessId,livenessOssId)))
+                    val ocrOssId =
+                        "fintek-loan-supermarket" + "_ocr_" + SharedPreferencesUtils.init(this@MainActivity)
+                            .getValue("userId") + ".png"
+                    val jsResponse = JSResponse(
+                        1,
+                        Gson().toJson(
+                            OcrModel(
+                                ocrRespomse?.idCardData?.name ?: "",
+                                ocrRespomse?.idCardData?.nik ?: "",
+                                ocrOssId
+                            )
+                        )
+                    )
                     val livenessJson = Gson().toJson(jsResponse)
-                    mHandler.complete(livenessJson)
-                    val urlJsResponse = JSResponse(1, Gson().toJson(LivenessUrlResponseModel(response?.data?.url?:"")))
+                    mIdNoHandler.complete(livenessJson)
+                    val urlJsResponse =
+                        JSResponse(1, Gson().toJson(OcrImageModel(response?.data?.url ?: "")))
                     val urlJson = Gson().toJson(urlJsResponse)
-                    mImageHandler.complete(urlJson)*/
+                    mIdNoBitmapHandler.complete(urlJson)
 
                 }
 
@@ -411,21 +555,30 @@ class MainActivity : BaseActivity() {
 
             })
     }
-    fun uploadImage(livenessId:String,file: File?) {
-       val builder =  MultipartBody.Builder()
+
+    fun uploadImage(livenessId: String, file: File?) {
+        val builder = MultipartBody.Builder()
             .setType(MultipartBody.FORM)//表单类型
-        val body = RequestBody . create (MediaType.parse("multipart/form-data"), file);//表单类型
+        val body = RequestBody.create(MediaType.parse("multipart/form-data"), file);//表单类型
         builder.addFormDataPart("photo", file?.getName(), body); //添加图片数据，body创建的请求体
-        val parts = builder . build ().parts();
+        val parts = builder.build().parts();
 
         NetHttp.getInstance()
             .uploadImg(parts, "_live_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
-                    val livenessOssId = "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity).getValue("userId") + ".png"
-                    val jsResponse = JSResponse(1, Gson().toJson(LivenessIdResponseModel(livenessId,livenessOssId)))
+                    val livenessOssId =
+                        "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity)
+                            .getValue("userId") + ".png"
+                    val jsResponse = JSResponse(
+                        1,
+                        Gson().toJson(LivenessIdResponseModel(livenessId, livenessOssId))
+                    )
                     val livenessJson = Gson().toJson(jsResponse)
                     mHandler.complete(livenessJson)
-                    val urlJsResponse = JSResponse(1, Gson().toJson(LivenessUrlResponseModel(response?.data?.url?:"")))
+                    val urlJsResponse = JSResponse(
+                        1,
+                        Gson().toJson(LivenessUrlResponseModel(response?.data?.url ?: ""))
+                    )
                     val urlJson = Gson().toJson(urlJsResponse)
                     mImageHandler.complete(urlJson)
 

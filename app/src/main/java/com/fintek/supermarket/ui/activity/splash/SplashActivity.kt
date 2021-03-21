@@ -1,6 +1,8 @@
 package com.fintek.supermarket.ui.activity.splash
 
 import android.content.Intent
+import com.adjust.sdk.Adjust
+import com.adjust.sdk.AdjustEvent
 import com.fintek.httprequestlibrary.BuildConfig
 import com.fintek.httprequestlibrary.api.error.HttpError
 import com.fintek.httprequestlibrary.api.response.HttpResource
@@ -27,6 +29,8 @@ class SplashActivity : BaseActivity() {
         if (!isTaskRoot) {
             finish()
         }
+        val adjustEvent = AdjustEvent("td8kon")
+        Adjust.trackEvent(adjustEvent)
         NetHttp.getInstance().getIsEnterCurrentApp(object : HttpCallback<HttpResource<String>>() {
             override fun onSuccess(response: HttpResource<String>?) {
                 response?.let {

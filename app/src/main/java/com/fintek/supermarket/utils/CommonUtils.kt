@@ -21,6 +21,31 @@ object CommonUtils {
         return Base64.encodeToString(b, Base64.DEFAULT)
     }
 
+    fun imageToBase64(inputStream: InputStream): String? {
+        val data: ByteArray
+        var result: String? = null
+        try {
+            //创建一个字符流大小的数组。
+            data = ByteArray(inputStream.available())
+            //写入数组
+            inputStream.read(data)
+            //用默认的编码格式进行编码
+            result = Base64.encodeToString(data, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            if (null != inputStream) {
+                try {
+                    inputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        return result
+    }
+
+
     fun getLogoToString(context: Context): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
         val bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.app_logo)
