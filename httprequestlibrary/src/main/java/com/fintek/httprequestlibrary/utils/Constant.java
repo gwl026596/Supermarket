@@ -11,7 +11,7 @@ public class Constant {
 
 
 
-
+    public final static String UNKNOWN = "$unknown";
     //Api
     public static final int RESPONSE_CODE = 200;
     public static final String SUCEESS_CODE = "200";

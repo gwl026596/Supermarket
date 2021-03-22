@@ -1,9 +1,18 @@
 package com.fintek.supermarket.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.LocationManager
+import android.provider.ContactsContract
+import android.telephony.TelephonyManager
 import android.util.Base64
+import com.fintek.httprequestlibrary.api.response.ExtInfoReq
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
 import com.google.gson.Gson
@@ -62,7 +71,7 @@ object CommonUtils {
         return toJson
     }
 
-    fun compressImage(bitmap: Bitmap,context: Context):File{
+    fun compressImage(bitmap: Bitmap, context: Context):File{
         val baos = ByteArrayOutputStream()
         bitmap.compress(
             Bitmap.CompressFormat.JPEG,
@@ -124,5 +133,168 @@ object CommonUtils {
             }
         }
 
+    }
+
+     fun getPkgListNew(context: Context): List<ExtInfoReq.ExtInfoReqBean.AppListBean>? {
+        val appLists= mutableListOf<ExtInfoReq.ExtInfoReqBean.AppListBean>()
+        try {
+            val packageInfos: List<PackageInfo> = context.getPackageManager().getInstalledPackages(
+                PackageManager.GET_ACTIVITIES or
+                        PackageManager.GET_SERVICES
+            )
+            for (info in packageInfos) {
+                val pkgName: String = info.packageName
+                val inTime: Long = info.firstInstallTime
+                val upTime: Long = info.lastUpdateTime
+                val versionCode: Int = info.versionCode
+                val versionName: String = info.versionName
+                val appName: String = info.applicationInfo.name
+                val flags: Int = info.applicationInfo.flags
+                val appType: String = if (isSystemApp(info)) "1" else "0"
+                val appListBean= ExtInfoReq.ExtInfoReqBean.AppListBean(
+                    appName,
+                    appType,
+                    flags.toString(),
+                    inTime.toString(),
+                    pkgName,
+                    upTime.toString(),
+                    versionCode.toString(),
+                    versionName
+                )
+                appLists.add(appListBean)
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+        return appLists
+    }
+
+    // 通过packName得到PackageInfo，作为参数传入即可
+     fun isSystemApp(pi: PackageInfo): Boolean {
+        val isSysApp = pi.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM === 1
+        val isSysUpd = pi.applicationInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP === 1
+        return isSysApp || isSysUpd
+    }
+
+    fun getContactList(context: Context):MutableList<ExtInfoReq.ExtInfoReqBean.ContactListBean>{
+        val contactLists= mutableListOf<ExtInfoReq.ExtInfoReqBean.ContactListBean>()
+        var cursor: Cursor?=null
+        try {
+
+            cursor = context.getContentResolver().query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                null, null, null, null
+            );
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    val displayName = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        )
+                    )
+                    val number = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.NUMBER
+                        )
+                    )
+                    val id = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone._ID
+                        )
+                    )
+                    val inVisibleGroup = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP
+                        )
+                    )
+                    val isUserProfile = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.IS_USER_PROFILE
+                        )
+                    )
+                    val lastTimeContacted = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.LAST_TIME_CONTACTED
+                        )
+                    )
+                    val sendToVoicemail = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.SEND_TO_VOICEMAIL
+                        )
+                    )
+                    val starred = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.STARRED
+                        )
+                    )
+                    val timesContacted = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.TIMES_CONTACTED
+                        )
+                    )
+                    val upTime = cursor.getString(
+                        cursor.getColumnIndex(
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_LAST_UPDATED_TIMESTAMP
+                        )
+                    )
+                    val phoneCount = cursor.getInt(
+                        cursor
+                            .getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)
+                    )
+                    contactLists.add(
+                        ExtInfoReq.ExtInfoReqBean.ContactListBean(
+                            phoneCount.toString(),
+                            id,
+                            inVisibleGroup,
+                            isUserProfile,
+                            lastTimeContacted,
+                            displayName,
+                            number,
+                            sendToVoicemail,
+                            starred,
+                            timesContacted,
+                            upTime
+                        )
+                    )
+
+                }
+
+            }
+        } catch (e: Exception) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return contactLists
+    }
+
+    /**
+     * 获取设备的唯一标识， 需要 “android.permission.READ_Phone_STATE”权限
+     */
+    @SuppressLint("MissingPermission")
+    fun getIMEI(context: Context): String? {
+        val tm: TelephonyManager = context
+            .getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val deviceId: String = tm.deviceId
+        return deviceId ?: "UnKnown"
+    }
+    @SuppressLint("MissingPermission")
+    fun getSubscriberId(context: Context?): String? {
+        val tm: TelephonyManager = context?.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+       val mSubscriberId = tm.getSubscriberId() // String
+        return mSubscriberId
+    }
+
+    /**
+     * 手机是否开启位置服务，如果没有开启那么所有app将不能使用定位功能
+     */
+    fun isLocServiceEnable(context: Context): String {
+        val locationManager: LocationManager =
+            context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val gps: Boolean = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        val network: Boolean = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        return if (gps || network) "1" else "0"
     }
 }

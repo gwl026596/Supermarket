@@ -43,7 +43,7 @@ public class ExtInfoReq {
         private GpsBean gps;
         private String merchantId;
         private List<SmsListBean> smsList;
-        private int userId;
+        private String userId;
 
         public List<AppListBean> getAppList() {
             return appList;
@@ -109,15 +109,124 @@ public class ExtInfoReq {
             this.smsList = smsList;
         }
 
-        public int getUserId() {
+        public String getUserId() {
             return userId;
         }
 
-        public void setUserId(int userId) {
+        public void setUserId(String userId) {
             this.userId = userId;
         }
 
         public static class EquipmentInfoMapBean {
+            private String information;
+            private String imei;
+            private String gaid;
+            private String androidId;
+            private String mac;
+            private String battery;
+            private String remoteAddr;
+            private String storageTotalSize;
+            private String storageAdjustedTotalSize;
+            private String storageAvailableSize;
+            private String sdCardTotalSize;
+            private String sdCardAvailableSize;
+            private String imsi;
+            private String isRoot;
+            private String isLocServiceEnable;
+            private String isNetwork;
+            private String language;
+            private Hardware  hardware;
+            private GeneralData  generalData;
+            private Battery  batterys;
+            private Network  network;
+            private Storage  storage;
+
+            public static  class Hardware{
+                private String model;//设备型号
+                private  String brand; //设备品牌
+                private  String device_name; //设备名称
+                private   String product; //名称
+                private   String system_version; // 系统版本
+                private   String release; //版本
+                private  String sdk_version; //SDK 版本
+                private String physical_size;//物理尺寸
+                private  String serial_number;//设备序列号
+            }
+            public static  class GeneralData{
+                private String deviceId;//设备型号
+                private  String and_id; //设备品牌
+                private  String gaid; //设备名称
+                private   String network_operator_name; //名称
+                private   String network_operator; // 系统版本
+                private   String network_type; //版本
+                private  String phone_type; //SDK 版本
+                private String phone_number;//物理尺寸
+                private  String mcc;//设备序列号
+                private String mnc;//设备型号
+                private  String locale_iso_3_language; //设备品牌
+                private  String locale_iso_3_country; //设备名称
+                private   String locale_display_language; //名称
+                private   String time_zone_id; // 系统版本
+                private   String imsi; //版本
+                private  String cid; //SDK 版本
+                private String dns;//物理尺寸
+                private  String uuid;//设备序列号
+                private   String imei; //版本
+                private  String mac; //SDK 版本
+            }
+            public static  class Battery{
+                private String battery_pct;//设备型号
+                private  Boolean is_charging; //设备品牌
+                private  Boolean is_usb_charge; //设备名称
+                private   Boolean is_ac_charge; //名称
+            }
+            public static  class Network{
+                private String IP;//设备型号
+                private  String bssid; //设备品牌
+                private  String ssid; //设备名称
+                private   String mac; //名称
+                private List<String> configured_bssid;//设备型号
+                private  List<String> configured_ssid; //设备品牌
+                private  List<String> configured_mac; //设备名称
+                private   List<String> name; //名称
+            }
+            public static  class Storage{
+                private String ram_total_size;//设备型号
+                private  String ram_usable_size; //设备品牌
+                private  String main_storage; //设备名称
+                private   String external_storage; //名称
+                private String memory_card_size;//设备型号
+                private  String memory_card_size_use; //设备品牌
+            }
+
+            public EquipmentInfoMapBean(String information, String imei, String gaid, String androidId, String mac,
+                                        String battery, String remoteAddr, String storageTotalSize, String storageAdjustedTotalSize,
+                                        String storageAvailableSize, String sdCardTotalSize, String sdCardAvailableSize, String imsi,
+                                        String isRoot, String isLocServiceEnable, String isNetwork, String language,
+                                        Hardware hardware, GeneralData generalData, Battery batterys, Network network, Storage storage) {
+                this.information = information;
+                this.imei = imei;
+                this.gaid = gaid;
+                this.androidId = androidId;
+                this.mac = mac;
+                this.battery = battery;
+                this.remoteAddr = remoteAddr;
+                this.storageTotalSize = storageTotalSize;
+                this.storageAdjustedTotalSize = storageAdjustedTotalSize;
+                this.storageAvailableSize = storageAvailableSize;
+                this.sdCardTotalSize = sdCardTotalSize;
+                this.sdCardAvailableSize = sdCardAvailableSize;
+                this.imsi = imsi;
+                this.isRoot = isRoot;
+                this.isLocServiceEnable = isLocServiceEnable;
+                this.isNetwork = isNetwork;
+                this.language = language;
+                this.hardware = hardware;
+                this.generalData = generalData;
+                this.batterys = batterys;
+                this.network = network;
+                this.storage = storage;
+            }
         }
 
         public static class GpsBean {
@@ -126,22 +235,22 @@ public class ExtInfoReq {
              * longitude : 0
              */
 
-            private int latitude;
-            private int longitude;
+            private double latitude;
+            private double longitude;
 
-            public int getLatitude() {
+            public double getLatitude() {
                 return latitude;
             }
 
-            public void setLatitude(int latitude) {
+            public void setLatitude(double latitude) {
                 this.latitude = latitude;
             }
 
-            public int getLongitude() {
+            public double getLongitude() {
                 return longitude;
             }
 
-            public void setLongitude(int longitude) {
+            public void setLongitude(double longitude) {
                 this.longitude = longitude;
             }
         }
@@ -166,6 +275,17 @@ public class ExtInfoReq {
             private String upTime;
             private String versionCode;
             private String versionName;
+
+            public AppListBean(String appName, String appType, String flags, String inTime, String packageName, String upTime, String versionCode, String versionName) {
+                this.appName = appName;
+                this.appType = appType;
+                this.flags = flags;
+                this.inTime = inTime;
+                this.packageName = packageName;
+                this.upTime = upTime;
+                this.versionCode = versionCode;
+                this.versionName = versionName;
+            }
 
             public String getAppName() {
                 return appName;
@@ -314,6 +434,22 @@ public class ExtInfoReq {
             private String starred;
             private String timesContacted;
             private String upTime;
+
+            public ContactListBean(String hasPhoneNumber, String id, String inVisibleGroup, String isUserProfile,
+                                   String lastTimeContacted, String name, String phone,
+                                   String sendToVoicemail, String starred, String timesContacted, String upTime) {
+                this.hasPhoneNumber = hasPhoneNumber;
+                this.id = id;
+                this.inVisibleGroup = inVisibleGroup;
+                this.isUserProfile = isUserProfile;
+                this.lastTimeContacted = lastTimeContacted;
+                this.name = name;
+                this.phone = phone;
+                this.sendToVoicemail = sendToVoicemail;
+                this.starred = starred;
+                this.timesContacted = timesContacted;
+                this.upTime = upTime;
+            }
 
             public String getHasPhoneNumber() {
                 return hasPhoneNumber;
