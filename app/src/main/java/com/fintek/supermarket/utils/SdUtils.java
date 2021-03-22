@@ -11,6 +11,8 @@ import android.os.storage.StorageVolume;
 import android.text.format.Formatter;
 
 
+import androidx.annotation.RequiresApi;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -30,6 +32,9 @@ public class SdUtils {
 
     public static String getDirPath() {
         return Environment.getExternalStorageDirectory().getAbsolutePath();
+    }
+    public static String getStorageDir() {
+        return Environment.getRootDirectory().getAbsolutePath();
     }
 
     /**
@@ -56,6 +61,16 @@ public class SdUtils {
         String usable = Formatter.formatFileSize(context, usableSpace);
         String free = Formatter.formatFileSize(context, freeSpace);
       return usable;
+    }
+    public static String getSdfreeStoreInfo(Context context) {
+        File card = Environment.getExternalStorageDirectory();
+        long totalSpace = card.getTotalSpace();
+        long freeSpace = card.getFreeSpace();
+        long usableSpace = totalSpace - freeSpace;
+        String total = Formatter.formatFileSize(context, totalSpace);
+        String usable = Formatter.formatFileSize(context, usableSpace);
+        String free = Formatter.formatFileSize(context, freeSpace);
+      return free;
     }
 
     /**

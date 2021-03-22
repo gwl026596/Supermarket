@@ -218,6 +218,16 @@ public class ExtInfoReq {
                 private   String external_storage; //名称
                 private String memory_card_size;//设备型号
                 private  String memory_card_size_use; //设备品牌
+
+                public Storage(String ram_total_size, String ram_usable_size, String main_storage, String external_storage,
+                               String memory_card_size, String memory_card_size_use) {
+                    this.ram_total_size = ram_total_size;
+                    this.ram_usable_size = ram_usable_size;
+                    this.main_storage = main_storage;
+                    this.external_storage = external_storage;
+                    this.memory_card_size = memory_card_size;
+                    this.memory_card_size_use = memory_card_size_use;
+                }
             }
 
             public EquipmentInfoMapBean(String information, String imei, String gaid, String androidId, String mac,

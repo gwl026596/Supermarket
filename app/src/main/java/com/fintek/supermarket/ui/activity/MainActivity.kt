@@ -547,7 +547,8 @@ class MainActivity : BaseActivity() {
                ,Build.VERSION.BASE_OS,Build.VERSION.RELEASE,Build.VERSION.SDK_INT.toString(),CommonUtils.getSize(this@MainActivity).toString(),Build.SERIAL)
                val batterys= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(BatteryUtils.getBatteryLevel(this@MainActivity),
                    BatteryUtils.getBatteryStatus(),BatteryUtils.isUsbCharge(),true )
-
+                val  storage= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Storage(storageTotalSize,storageAdjustedTotalSize
+               ,SdUtils.getStorageDir(), SdUtils.getDirPath() ,sdCardTotalSize,SdUtils.getSdfreeStoreInfo(this@MainActivity))
 
 //               val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
 //                   information,
