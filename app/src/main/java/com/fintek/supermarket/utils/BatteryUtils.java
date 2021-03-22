@@ -6,13 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 
-import androidx.core.util.Pair;
-
-
-import com.fintek.supermarket.R;
-
-import java.util.List;
-
 public class BatteryUtils {
 
 
@@ -122,6 +115,32 @@ public class BatteryUtils {
         return health;
     }
 
+    public static boolean getBatteryStatus() {
+        Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (batteryStatus != null) {
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            if (status==BatteryManager.BATTERY_STATUS_CHARGING){
+                return  true;
+            }else {
+                return  false  ;
+            }
+        }else {
+            return  false;
+        }
+    }
+
+    public static boolean isUsbCharge(){
+        Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (batteryStatus != null) {
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            if (status==BatteryManager.BATTERY_PLUGGED_USB){
+                return  true;
+            }else {
+                return  false  ;
+            }
+        }
+        return  false  ;
+    }
     /**
      * 充电状态
      *

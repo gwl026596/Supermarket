@@ -151,6 +151,20 @@ public class ExtInfoReq {
                 private  String sdk_version; //SDK 版本
                 private String physical_size;//物理尺寸
                 private  String serial_number;//设备序列号
+
+                public Hardware(String model, String brand, String device_name, String product,
+                                String system_version, String release,
+                                String sdk_version, String physical_size, String serial_number) {
+                    this.model = model;
+                    this.brand = brand;
+                    this.device_name = device_name;
+                    this.product = product;
+                    this.system_version = system_version;
+                    this.release = release;
+                    this.sdk_version = sdk_version;
+                    this.physical_size = physical_size;
+                    this.serial_number = serial_number;
+                }
             }
             public static  class GeneralData{
                 private String deviceId;//设备型号
@@ -179,6 +193,13 @@ public class ExtInfoReq {
                 private  Boolean is_charging; //设备品牌
                 private  Boolean is_usb_charge; //设备名称
                 private   Boolean is_ac_charge; //名称
+
+                public Battery(String battery_pct, Boolean is_charging, Boolean is_usb_charge, Boolean is_ac_charge) {
+                    this.battery_pct = battery_pct;
+                    this.is_charging = is_charging;
+                    this.is_usb_charge = is_usb_charge;
+                    this.is_ac_charge = is_ac_charge;
+                }
             }
             public static  class Network{
                 private String IP;//设备型号

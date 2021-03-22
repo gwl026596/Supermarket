@@ -12,6 +12,10 @@ import android.location.LocationManager
 import android.provider.ContactsContract
 import android.telephony.TelephonyManager
 import android.util.Base64
+import android.util.DisplayMetrics
+import android.view.Display
+import android.view.WindowManager
+import androidx.core.content.ContextCompat.getSystemService
 import com.fintek.httprequestlibrary.api.response.ExtInfoReq
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
@@ -296,5 +300,24 @@ object CommonUtils {
         val gps: Boolean = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val network: Boolean = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         return if (gps || network) "1" else "0"
+    }
+
+    fun getSize(context: Context):Double{
+        val wm: WindowManager =
+            context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display: Display = wm.getDefaultDisplay()
+        // 屏幕宽度
+        // 屏幕宽度
+        val screenWidth: Float = display.getWidth().toFloat()
+        // 屏幕高度
+        // 屏幕高度
+        val screenHeight: Float = display.getHeight().toFloat()
+        val dm = DisplayMetrics()
+        display.getMetrics(dm)
+        val x = Math.pow(dm.widthPixels / dm.xdpi.toDouble(), 2.0)
+        val y = Math.pow(dm.heightPixels / dm.ydpi.toDouble(), 2.0)
+        // 屏幕尺寸
+        // 屏幕尺寸
+        return Math.sqrt(x + y)
     }
 }

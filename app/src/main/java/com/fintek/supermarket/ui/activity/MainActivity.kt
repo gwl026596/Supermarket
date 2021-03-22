@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.ContactsContract
 import android.provider.MediaStore
@@ -542,6 +543,12 @@ class MainActivity : BaseActivity() {
                val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
                val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "1" else "0"
                val language = LanguageUtils.getDefaultLanguage(this@MainActivity)
+               val hardware= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Hardware(Build.MODEL,Build.BRAND,Build.DEVICE,Build.PRODUCT
+               ,Build.VERSION.BASE_OS,Build.VERSION.RELEASE,Build.VERSION.SDK_INT.toString(),CommonUtils.getSize(this@MainActivity).toString(),Build.SERIAL)
+               val batterys= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(BatteryUtils.getBatteryLevel(this@MainActivity),
+                   BatteryUtils.getBatteryStatus(),BatteryUtils.isUsbCharge(),true )
+
+
 //               val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
 //                   information,
 //                   imei,
