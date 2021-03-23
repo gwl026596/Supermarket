@@ -305,12 +305,10 @@ public class CameraActivity extends AppCompatActivity {
                     Bitmap  bitmap = ((BitmapDrawable) displayImageView.getDrawable()).getBitmap();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
                     fileOutputStream.close();
-                    Log.d("hhs",bitmap.toString());
-                    Log.d("hhs",getBitmapToBase64(bitmap));
-                   /* Intent intent = new Intent();
-                    //intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
-                    intent.putExtra("bitmapBase64", getBitmapToBase64(bitmap));
-                    setResult(Activity.RESULT_OK, intent);*/
+                    //Log.d("hhs",outputFile.getPath());
+                    Intent intent = new Intent();
+                    intent.putExtra("bitmapBase64", outputFile.getPath());
+                    setResult(Activity.RESULT_OK, intent);
                     finish();
                 } catch (IOException e) {
                     e.printStackTrace();

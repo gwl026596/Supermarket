@@ -49,12 +49,12 @@ public abstract class HttpCallback<T> implements Callback<T> {
         if (e instanceof JsonParseException || e instanceof JSONException) {
             onFail(new HttpError(Constant.ERROR_UNKNOWN, "解析错误"));
         } else if (e instanceof ConnectException || e instanceof UnknownHostException) {
-            ToastUtils.showShort("无网络链接");
+            ToastUtils.showShort("No network link");
             onFail(new HttpError(Constant.ERROR_UNKNOWN, "无网络链接"));
         } else if (e instanceof javax.net.ssl.SSLHandshakeException) {
             onFail(new HttpError(Constant.ERROR_UNKNOWN, "证书验证失败"));
         } else if (e instanceof SocketTimeoutException) {
-            ToastUtils.showShort("网络异常");
+            ToastUtils.showShort("Jaringan tidak stabil, mohon ganti jaringan lalu coba kembali.");
             onFail(new HttpError(Constant.CODE_000004,"网络异常"));
         } else {
             onFail(new HttpError(Constant.ERROR_UNKNOWN, "未知错误"));

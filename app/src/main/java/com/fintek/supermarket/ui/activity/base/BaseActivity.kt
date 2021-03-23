@@ -3,9 +3,11 @@ package com.fintek.supermarket.ui.activity.base
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.fintek.supermarket.R
+import com.fintek.supermarket.dialog.PictureDialog
 import com.gyf.immersionbar.ImmersionBar
 
 abstract class BaseActivity : AppCompatActivity() {
+     var  loadingDialog:PictureDialog?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(getLayoutId())
@@ -29,5 +31,16 @@ abstract class BaseActivity : AppCompatActivity() {
             .keyboardEnable(true).init()
     }
 
+   protected open fun showLoading(){
+       if (loadingDialog == null) {
+           loadingDialog = PictureDialog(this)
+       }
+       loadingDialog!!.show()
+   }
+   protected open fun hideLoading(){
+       if (loadingDialog != null) {
+           loadingDialog!!.dismiss()
+       }
 
+   }
 }

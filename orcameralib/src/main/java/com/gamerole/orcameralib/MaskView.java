@@ -166,7 +166,7 @@ public class MaskView extends View {
                     (int) (top + (262f / 632) * height));
         }
         if (locatorDrawable != null) {
-            locatorDrawable.draw(canvas);
+            //locatorDrawable.draw(canvas);
         }
     }
 

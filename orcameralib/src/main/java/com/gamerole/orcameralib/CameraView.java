@@ -138,7 +138,7 @@ public class CameraView extends FrameLayout {
                 break;
         }
 
-        hintView.setImageResource(hintResourceId);
+       // hintView.setImageResource(hintResourceId);
     }
 
     private void init() {

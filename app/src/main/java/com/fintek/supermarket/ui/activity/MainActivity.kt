@@ -353,35 +353,8 @@ class MainActivity : BaseActivity() {
         intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH,  File(filesDir, "${System.currentTimeMillis()}.jpg").path)
         intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_ID_CARD_FRONT)
         startActivityForResult(intent, REQUEST_CODE_TAKE)
-//        val intent =
-//            Intent("android.media.action.IMAGE_CAPTURE")
-//        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
-//        //启动相机（带返回结果）
-//        startActivityForResult(intent, REQUEST_CODE_TAKE)
     }
 
-
-    /**
-     * 设置裁剪参数，开始裁剪
-     * @param uri
-     */
-    fun startPhotoZoom(uri: Uri?) {
-        val intent =
-            Intent("com.android.camera.action.CROP")
-        intent.setDataAndType(uri, "image/*")
-        // 下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
-        intent.putExtra("crop", "true")
-        intent.putExtra("scale", true)
-        intent.putExtra("aspectX", 2) //裁剪框 X 比值
-        intent.putExtra("aspectY", 1) //裁剪框 Y 比值
-        intent.putExtra("outputX", 600) //裁剪后输出宽度
-        intent.putExtra("outputY", 300) //裁剪后输出高度
-        intent.putExtra("return-data", false)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri) //输出路径
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString())
-        intent.putExtra("noFaceDetection", true) // no face detection
-        startActivityForResult(intent, CROP_PICTURE)
-    }
 
     private fun startLivenessActivity() {
         val intent = Intent(this, LivenessActivity::class.java)
@@ -400,6 +373,7 @@ class MainActivity : BaseActivity() {
                     val bitmap = LivenessResult.getLivenessBitmap();// 本次活体图片
                     val bitmaps = LivenessResult.getLivenessBase64Str();// 本次活体图片
                     Log.d("jszzz", livenessId + "==" + bitmaps)
+                    showLoading()
                     uploadImgAndLicenessId(
                         livenessId,
                         CommonUtils.compressImage(bitmap, this@MainActivity)
@@ -410,15 +384,9 @@ class MainActivity : BaseActivity() {
                     val errorMsg = LivenessResult.getErrorMsg();// 失败原因
                 }
             } else if (requestCode === REQUEST_CODE_TAKE) {
-                val stringExtra = data?.getStringExtra("bitmapBase64");
-                stringExtra?.let{
-                    val base64ToBitmap = CommonUtils.getBase64ToBitmap(it)
-                    base64ToBitmap?.let {
-                        uploadOcrBitmap(it, stringExtra ?: "")
-                    }
-                }
-
-                //startPhotoZoom(imageUri);
+                showLoading()
+                val path = data?.getStringExtra("bitmapBase64")
+                uploadOcrBitmap(path?:"", CommonUtils.imagePathToBase64(path)?:"")
             } else if (requestCode === CROP_PICTURE) { // 取得裁剪后的图片
                 try {
                     val selectedImage: Bitmap =
@@ -674,7 +642,7 @@ class MainActivity : BaseActivity() {
 
 
 
-    private fun uploadOcrBitmap(selectedImage: Bitmap, encodedImage: String) {
+    private fun uploadOcrBitmap(path: String, encodedImage: String) {
         Log.d("base64", encodedImage)
         NetHttp.getInstance()
             .uoloadOcrAdvance(
@@ -683,7 +651,7 @@ class MainActivity : BaseActivity() {
                     override fun onSuccess(response: HttpResource<OcrRespomse>?) {
                         uploadOcrImage(
                             response?.data,
-                            CommonUtils.compressImage(selectedImage, this@MainActivity)
+                            PhotoOperateUtils(this@MainActivity).scal(path)
                         )
                     }
 
@@ -721,6 +689,7 @@ class MainActivity : BaseActivity() {
         NetHttp.getInstance()
             .uploadImg(parts, "_ocr_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
+                    hideLoading()
                     val ocrOssId =
                         "fintek-loan-supermarket" + "_ocr_" + SharedPreferencesUtils.init(this@MainActivity)
                             .getValue("userId") + ".png"
@@ -744,7 +713,7 @@ class MainActivity : BaseActivity() {
                 }
 
                 override fun onFail(yySportError: HttpError?) {
-
+                    hideLoading()
                 }
 
             })
@@ -760,6 +729,7 @@ class MainActivity : BaseActivity() {
         NetHttp.getInstance()
             .uploadImg(parts, "_live_", object : HttpCallback<HttpResource<LivenessUrlResponse>>() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
+                    hideLoading()
                     val livenessOssId =
                         "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity)
                             .getValue("userId") + ".png"
@@ -779,7 +749,7 @@ class MainActivity : BaseActivity() {
                 }
 
                 override fun onFail(yySportError: HttpError?) {
-
+                    hideLoading()
                 }
 
             })

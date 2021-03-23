@@ -11,11 +11,11 @@ import android.graphics.BitmapFactory
 import android.location.LocationManager
 import android.provider.ContactsContract
 import android.telephony.TelephonyManager
+import android.text.TextUtils
 import android.util.Base64
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.WindowManager
-import androidx.core.content.ContextCompat.getSystemService
 import com.fintek.httprequestlibrary.api.response.ExtInfoReq
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
@@ -85,6 +85,37 @@ object CommonUtils {
         return toJson
     }
 
+    /**
+     * 将图片转换成Base64编码的字符串
+     */
+    fun imagePathToBase64(path: String?): String? {
+        if (TextUtils.isEmpty(path)) {
+            return null
+        }
+        var inputStream: InputStream? = null
+        var data: ByteArray? = null
+        var result: String? = null
+        try {
+            inputStream = FileInputStream(path)
+            //创建一个字符流大小的数组。
+            data = ByteArray(inputStream.available())
+            //写入数组
+            inputStream.read(data)
+            //用默认的编码格式进行编码
+            result = Base64.encodeToString(data, Base64.NO_CLOSE)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        } finally {
+            if (null != inputStream) {
+                try {
+                    inputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        return result
+    }
     fun compressImage(bitmap: Bitmap, context: Context):File{
         val baos = ByteArrayOutputStream()
         bitmap.compress(
