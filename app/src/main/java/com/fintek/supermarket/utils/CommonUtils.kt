@@ -33,6 +33,16 @@ object CommonUtils {
         val b = baos.toByteArray()
         return Base64.encodeToString(b, Base64.DEFAULT)
     }
+    fun getBase64ToBitmap(base64: String): Bitmap? {
+        var bitmap:Bitmap? = null;
+        try {
+            val bitmapByte = Base64.decode(base64, Base64.DEFAULT);
+            bitmap = BitmapFactory.decodeByteArray(bitmapByte, 0, bitmapByte.size);
+        } catch (e:Exception ) {
+            e.printStackTrace();
+        }
+         return bitmap
+    }
 
     fun imageToBase64(inputStream: InputStream): String? {
         val data: ByteArray
@@ -151,8 +161,8 @@ object CommonUtils {
                 val inTime: Long = info.firstInstallTime
                 val upTime: Long = info.lastUpdateTime
                 val versionCode: Int = info.versionCode
-                val versionName: String = info.versionName
-                val appName: String = info.applicationInfo.name
+                val versionName: String = info?.versionName?:"1.0.0"
+                val appName: String = info.applicationInfo.loadLabel(context.getPackageManager()).toString()
                 val flags: Int = info.applicationInfo.flags
                 val appType: String = if (isSystemApp(info)) "1" else "0"
                 val appListBean= ExtInfoReq.ExtInfoReqBean.AppListBean(
@@ -211,11 +221,7 @@ object CommonUtils {
                             ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP
                         )
                     )
-                    val isUserProfile = cursor.getString(
-                        cursor.getColumnIndex(
-                            ContactsContract.CommonDataKinds.Phone.IS_USER_PROFILE
-                        )
-                    )
+                    val isUserProfile =0
                     val lastTimeContacted = cursor.getString(
                         cursor.getColumnIndex(
                             ContactsContract.CommonDataKinds.Phone.LAST_TIME_CONTACTED
@@ -250,7 +256,7 @@ object CommonUtils {
                             phoneCount.toString(),
                             id,
                             inVisibleGroup,
-                            isUserProfile,
+                            isUserProfile.toString(),
                             lastTimeContacted,
                             displayName,
                             number,

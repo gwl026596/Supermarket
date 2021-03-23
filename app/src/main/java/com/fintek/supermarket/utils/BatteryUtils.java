@@ -115,7 +115,7 @@ public class BatteryUtils {
         return health;
     }
 
-    public static boolean getBatteryStatus() {
+    public static boolean getBatteryStatus(Context context) {
         Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus != null) {
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
@@ -129,7 +129,7 @@ public class BatteryUtils {
         }
     }
 
-    public static boolean isUsbCharge(){
+    public static boolean isUsbCharge(Context context){
         Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus != null) {
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);

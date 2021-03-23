@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import java.util.Locale;
+import java.util.TimeZone;
 
 
 /**
@@ -93,5 +94,14 @@ public class LanguageUtils {
         }
         resources.updateConfiguration(configuration, resources.getDisplayMetrics());
     }
+    /**
+     * 获取当前时区
+     * @return
+     */
+    public static String getCurrentTimeZone() {
+        TimeZone tz = TimeZone.getDefault();
+        String strTz = tz.getDisplayName(false, TimeZone.SHORT);
+        return strTz;
 
+    }
 }

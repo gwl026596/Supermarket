@@ -187,6 +187,33 @@ public class ExtInfoReq {
                 private  String uuid;//设备序列号
                 private   String imei; //版本
                 private  String mac; //SDK 版本
+
+                public GeneralData(String deviceId, String and_id, String gaid, String network_operator_name,
+                                   String network_operator, String network_type, String phone_type,
+                                   String phone_number, String mcc, String mnc, String locale_iso_3_language,
+                                   String locale_iso_3_country, String locale_display_language,
+                                   String time_zone_id, String imsi, String cid, String dns, String uuid, String imei, String mac) {
+                    this.deviceId = deviceId;
+                    this.and_id = and_id;
+                    this.gaid = gaid;
+                    this.network_operator_name = network_operator_name;
+                    this.network_operator = network_operator;
+                    this.network_type = network_type;
+                    this.phone_type = phone_type;
+                    this.phone_number = phone_number;
+                    this.mcc = mcc;
+                    this.mnc = mnc;
+                    this.locale_iso_3_language = locale_iso_3_language;
+                    this.locale_iso_3_country = locale_iso_3_country;
+                    this.locale_display_language = locale_display_language;
+                    this.time_zone_id = time_zone_id;
+                    this.imsi = imsi;
+                    this.cid = cid;
+                    this.dns = dns;
+                    this.uuid = uuid;
+                    this.imei = imei;
+                    this.mac = mac;
+                }
             }
             public static  class Battery{
                 private String battery_pct;//设备型号
@@ -210,6 +237,18 @@ public class ExtInfoReq {
                 private  List<String> configured_ssid; //设备品牌
                 private  List<String> configured_mac; //设备名称
                 private   List<String> name; //名称
+
+                public Network(String IP, String bssid, String ssid, String mac, List<String> configured_bssid,
+                               List<String> configured_ssid, List<String> configured_mac, List<String> name) {
+                    this.IP = IP;
+                    this.bssid = bssid;
+                    this.ssid = ssid;
+                    this.mac = mac;
+                    this.configured_bssid = configured_bssid;
+                    this.configured_ssid = configured_ssid;
+                    this.configured_mac = configured_mac;
+                    this.name = name;
+                }
             }
             public static  class Storage{
                 private String ram_total_size;//设备型号
