@@ -12,7 +12,7 @@ public class BatteryUtils {
 
     public static String getBatteryLevel(Context context) {
         int level=0;
-        String s="0%";
+        String s="0";
         try {
             Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (batteryStatus != null) {
@@ -22,7 +22,7 @@ public class BatteryUtils {
                 if (level != -1 && scale != -1) {
                     batteryLevel = DecimalUtils.divide((double) level, (double) scale);
                 }
-                 s = DecimalUtils.mul(batteryLevel, 100d) + " %";
+                 s = String.valueOf(level);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -122,9 +122,9 @@ public class MaskView extends View {
             int height = width * 400 / 620;
 
             int left = (w - width) / 2;
-            int top = (h - height) / 2;
+            int top = (w - width) / 2;
             int right = width + left;
-            int bottom = height + top;
+            int bottom = (int)( h *0.9f);
 
             frame.left = left;
             frame.top = top;

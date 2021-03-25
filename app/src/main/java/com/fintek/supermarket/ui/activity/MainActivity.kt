@@ -500,141 +500,148 @@ class MainActivity : BaseActivity() {
             }
 
             if (needUploadExtInfoResponse.isEquipmentInfoMap){
-                val information = System.getProperty("http.agent")
-                val imei = CommonUtils.getIMEI(this@MainActivity)
-                val gaid= AdvertisingIdClient.getAdvertisingIdInfo(this@MainActivity).id
-                val androidId: String = Settings.System.getString(
-                    contentResolver,
-                    Settings.System.ANDROID_ID
-                )
-                val mac = DeviceUtils.getMacAddress()
-                val battery = BatteryUtils.getBatteryLevel(this@MainActivity)
-                val remoteAddr = GatewayUtils.getIp(this@MainActivity).get("en0")
-               val storageTotalSize= MemoryUtils.getTotalMemMemory(this@MainActivity)
-               val storageAdjustedTotalSize= MemoryUtils.getAvailMemMemMemory(this@MainActivity)
-               val storageAvailableSize= MemoryUtils.getUsableMemMemory(this@MainActivity)
-               val sdCardTotalSize= SdUtils.getSdTotalStoreInfo(this@MainActivity)
-               val sdCardAvailableSize= SdUtils.getSdUsableSpaceStoreInfo(this@MainActivity)
-               val imsi = CommonUtils.getSubscriberId(this@MainActivity)
-               val isRoot = RootUtils.isRoot(this@MainActivity)
-               val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
-               val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "1" else "0"
-               val language = LanguageUtils.getDefaultLanguage(this@MainActivity)
-               val hardware= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Hardware(
-                   Build.MODEL,
-                   Build.BRAND,
-                   Build.DEVICE,
-                   Build.PRODUCT,
-                   Build.VERSION.BASE_OS,
-                   Build.VERSION.RELEASE,
-                   Build.VERSION.SDK_INT.toString(),
-                   CommonUtils.getSize(
-                       this@MainActivity
-                   ).toString(),
-                   Build.SERIAL
-               )
-               val batterys= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(
-                   BatteryUtils.getBatteryLevel(
-                       this@MainActivity
-                   ),
-                   BatteryUtils.getBatteryStatus(this@MainActivity),
-                   BatteryUtils.isUsbCharge(this@MainActivity),
-                   true
-               )
-                val  storage= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Storage(
-                    storageTotalSize,
-                    storageAdjustedTotalSize,
-                    SdUtils.getStorageDir(),
-                    SdUtils.getDirPath(),
-                    sdCardTotalSize,
-                    SdUtils.getSdfreeStoreInfo(
-                        this@MainActivity
-                    )
-                )
-                val ip = NetWorkUtils.getWifiIp(this@MainActivity)
-                val bssid = NetWorkUtils.getWifiBssid(this@MainActivity)
-                val ssid = NetWorkUtils.getWifiSsid(this@MainActivity)
-                val macs = NetWorkUtils.getWifiMac(this@MainActivity)
-                val configured_bssid = NetWorkUtils.getConfiguredBssid(this@MainActivity)
-                val configured_ssid = NetWorkUtils.getConfiguredSsid(this@MainActivity)
-                val configured_mac = NetWorkUtils.getConfiguredMac(this@MainActivity)
-                val name = NetWorkUtils.getWifiName(this@MainActivity)
-                val network= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Network(
-                    ip.toString(), bssid, ssid, macs,
-                    configured_bssid, configured_ssid, configured_mac, name
-                )
-                val network_operator_name = NetWorkUtils.getOperatorName(this@MainActivity)
-                val network_operator = NetWorkUtils.getOperator(this@MainActivity)
-                val network_type = "${NetWorkUtils.getNetworkState(this@MainActivity)}g"
-                val phone_type = NetWorkUtils.getPhoneType(this@MainActivity)
-               val mcc = NetWorkUtils.getMcc(this@MainActivity)
-               val mnc = NetWorkUtils.getMcc(this@MainActivity)
-               val locale_iso_3_language = NetWorkUtils.getMcc(this@MainActivity)
-               val locale_iso_3_country = NetWorkUtils.getLocaleIsoCountry(this@MainActivity)
-               val time_zone_id = LanguageUtils.getCurrentTimeZone()
-               val dns = NetWorkUtils.getDns(this@MainActivity)
-                val generalData= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.GeneralData(
-                    imei,
-                    androidId,
-                    gaid,
-                    network_operator_name,
-                    network_operator,
-                    network_type,
-                    phone_type,
-                    mcc,
-                    mcc,
-                    mnc,
-                    locale_iso_3_language,
-                    locale_iso_3_country,
-                    language,
-                    time_zone_id,
-                    imsi,
-                    imsi,
-                    dns,
-                    imsi,
-                    imsi,
-                    mac
-                )
-               val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
-                   information,
-                   imei,
-                   gaid,
-                   androidId,
-                   mac,
-                   battery,
-                   remoteAddr,
-                   storageTotalSize,
-                   storageAdjustedTotalSize,
-                   storageAvailableSize,
-                   sdCardTotalSize,
-                   sdCardAvailableSize,
-                   imsi,
-                   isRoot,
-                   isLocServiceEnable,
-                   isNetwork,
-                   language,
-                   hardware,
-                   generalData,
-                   batterys,
-                   network,
-                   storage
-               )
+                    var gaid:String=""
+                    val information = System.getProperty("http.agent")
+                    val imei = CommonUtils.getIMEI(this@MainActivity)
+                    try {
+                        gaid = AdvertisingIdClient.getAdvertisingIdInfo(this@MainActivity).id
+                    } catch (e:Exception){
 
-                extInfoReqBean.equipmentInfoMap=equipmentInfoMapBeans
+                    }
+                    val androidId: String = Settings.System.getString(
+                        contentResolver,
+                        Settings.System.ANDROID_ID
+                    )
+                    val mac = DeviceUtils.getMacAddress()
+                    val battery = BatteryUtils.getBatteryLevel(this@MainActivity)
+                    val remoteAddr = GatewayUtils.getIp(this@MainActivity).get("en0")
+                    val storageTotalSize= MemoryUtils.getTotalMemMemory(this@MainActivity)
+                    val storageAdjustedTotalSize= MemoryUtils.getAvailMemMemMemory(this@MainActivity)
+                    val storageAvailableSize= MemoryUtils.getUsableMemMemory(this@MainActivity)
+                    val sdCardTotalSize= SdUtils.getSdTotalStoreInfo(this@MainActivity)
+                    val sdCardAvailableSize= SdUtils.getSdUsableSpaceStoreInfo(this@MainActivity)
+                    val imsi = CommonUtils.getSubscriberId(this@MainActivity)
+                    val isRoot = RootUtils.isRoot(this@MainActivity)
+                    val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
+                    val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "1" else "0"
+                    val language = LanguageUtils.getDefaultLanguage(this@MainActivity)
+                    val hardware= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Hardware(
+                        Build.MODEL,
+                        Build.BRAND,
+                        Build.DEVICE,
+                        Build.PRODUCT,
+                        Build.VERSION.BASE_OS,
+                        Build.VERSION.RELEASE,
+                        Build.VERSION.SDK_INT.toString(),
+                        CommonUtils.getSize(
+                            this@MainActivity
+                        ).toString(),
+                        Build.SERIAL
+                    )
+                    val batterys= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(
+                        BatteryUtils.getBatteryLevel(
+                            this@MainActivity
+                        ),
+                        BatteryUtils.getBatteryStatus(this@MainActivity),
+                        BatteryUtils.isUsbCharge(this@MainActivity),
+                        true
+                    )
+                    val  storage= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Storage(
+                        storageTotalSize,
+                        storageAdjustedTotalSize,
+                        SdUtils.getStorageDir(),
+                        SdUtils.getDirPath(),
+                        sdCardTotalSize,
+                        SdUtils.getSdfreeStoreInfo(
+                            this@MainActivity
+                        )
+                    )
+                    val ip = NetWorkUtils.getWifiIp(this@MainActivity)
+                    val bssid = NetWorkUtils.getWifiBssid(this@MainActivity)
+                    val ssid = NetWorkUtils.getWifiSsid(this@MainActivity)
+                    val macs = NetWorkUtils.getWifiMac(this@MainActivity)
+                    val configured_bssid = NetWorkUtils.getConfiguredBssid(this@MainActivity)
+                    val configured_ssid = NetWorkUtils.getConfiguredSsid(this@MainActivity)
+                    val configured_mac = NetWorkUtils.getConfiguredMac(this@MainActivity)
+                    val name = NetWorkUtils.getWifiName(this@MainActivity)
+                    val network= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Network(
+                        ip.toString(), bssid, ssid, macs,
+                        configured_bssid, configured_ssid, configured_mac, name
+                    )
+                    val network_operator_name = NetWorkUtils.getOperatorName(this@MainActivity)
+                    val network_operator = NetWorkUtils.getOperator(this@MainActivity)
+                    val network_type = "${NetWorkUtils.getNetworkState(this@MainActivity)}g"
+                    val phone_type = NetWorkUtils.getPhoneType(this@MainActivity)
+                    val mcc = NetWorkUtils.getMcc(this@MainActivity)
+                    val mnc = NetWorkUtils.getMcc(this@MainActivity)
+                    val locale_iso_3_language = NetWorkUtils.getMcc(this@MainActivity)
+                    val locale_iso_3_country = NetWorkUtils.getLocaleIsoCountry(this@MainActivity)
+                    val time_zone_id = LanguageUtils.getCurrentTimeZone()
+                    val dns = NetWorkUtils.getDns(this@MainActivity)
+                    val generalData= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.GeneralData(
+                        imei,
+                        androidId,
+                        gaid,
+                        network_operator_name,
+                        network_operator,
+                        network_type,
+                        phone_type,
+                        mcc,
+                        mcc,
+                        mnc,
+                        locale_iso_3_language,
+                        locale_iso_3_country,
+                        language,
+                        time_zone_id,
+                        imsi,
+                        imsi,
+                        dns,
+                        imsi,
+                        imsi,
+                        mac
+                    )
+                    val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
+                        information,
+                        imei,
+                        gaid,
+                        androidId,
+                        mac,
+                        battery,
+                        remoteAddr,
+                        storageTotalSize,
+                        storageAdjustedTotalSize,
+                        storageAvailableSize,
+                        sdCardTotalSize,
+                        sdCardAvailableSize,
+                        imsi,
+                        isRoot,
+                        isLocServiceEnable,
+                        isNetwork,
+                        language,
+                        hardware,
+                        generalData,
+                        batterys,
+                        network,
+                        storage
+                    )
+
+                    extInfoReqBean.equipmentInfoMap=equipmentInfoMapBeans
+
+
             }
             extInfoReqBean.userId=SharedPreferencesUtils.init(this@MainActivity).getValue("userId")
             val extInfoReq=ExtInfoReq(extInfoReqBean)
-            NetHttp.getInstance().extInfo(extInfoReq,
-                object : HttpCallback<HttpResource<String>>() {
-                    override fun onSuccess(response: HttpResource<String>?) {
-
-                    }
-
-                    override fun onFail(yySportError: HttpError?) {
-
-                    }
-
-                })
+//            NetHttp.getInstance().extInfo(extInfoReq,
+//                object : HttpCallback<HttpResource<String>>() {
+//                    override fun onSuccess(response: HttpResource<String>?) {
+//
+//                    }
+//
+//                    override fun onFail(yySportError: HttpError?) {
+//
+//                    }
+//
+//                })
         }
 
     }
