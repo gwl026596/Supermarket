@@ -27,7 +27,7 @@ public class RootUtils {
      */
 
     public  static String isRoot(Context context) {
-        return (existingRWPaths().size() > 0 || existingDangerousProperties().size() > 0 || existingRootFiles().size() > 0 || existingRootPackages(context).size() > 0) ? "1" : "0";
+        return (existingRWPaths().size() > 0 || existingDangerousProperties().size() > 0 || existingRootFiles().size() > 0 || existingRootPackages(context).size() > 0) ? "true" : "false";
     }
 
 

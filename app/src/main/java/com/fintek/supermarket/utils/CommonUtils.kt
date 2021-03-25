@@ -336,7 +336,7 @@ object CommonUtils {
             context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val gps: Boolean = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val network: Boolean = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        return if (gps || network) "1" else "0"
+        return if (gps || network) "true" else "false"
     }
 
     fun getSize(context: Context):Double{

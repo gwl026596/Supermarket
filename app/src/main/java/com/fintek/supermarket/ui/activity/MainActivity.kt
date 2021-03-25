@@ -14,13 +14,14 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.StatFs
 import android.provider.ContactsContract
-import android.provider.MediaStore
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
 import android.webkit.JavascriptInterface
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -66,6 +67,7 @@ class MainActivity : BaseActivity() {
     val REQUEST_PERMISSION_READ_CONTACTS: Int = 2005
     val REQUEST_CONTACT_CODE: Int = 2006
     var url: String? = null
+    var userAgent:String=""
     private val IMAGE_FILE_LOCATION =
         "file:///" + Environment.getExternalStorageDirectory().getPath() + "/temp.jpg"
     private val imageUri = Uri.parse(IMAGE_FILE_LOCATION)
@@ -96,6 +98,7 @@ class MainActivity : BaseActivity() {
             BaseApplication.xAuthToken =
                 SharedPreferencesUtils.init(this@MainActivity).getValue("token")
         }
+         userAgent=webView.getSettings().getUserAgentString()
     }
     /* override fun initImmersionBar() {
          super.initImmersionBar()
@@ -478,7 +481,7 @@ class MainActivity : BaseActivity() {
         if (!TextUtils.isEmpty(SharedPreferencesUtils.init(this@MainActivity).getValue("userId"))){
             val extInfoReqBean= ExtInfoReq.ExtInfoReqBean()
             if (needUploadExtInfoResponse.isUserContact){
-                extInfoReqBean.contactList= CommonUtils.getContactList(this@MainActivity)
+               // extInfoReqBean.contactList= CommonUtils.getContactList(this@MainActivity)
             }
 
             if (needUploadExtInfoResponse.isGps){
@@ -496,12 +499,12 @@ class MainActivity : BaseActivity() {
                     })
             }
             if (needUploadExtInfoResponse.isAppInfo){
-                extInfoReqBean.appList=CommonUtils.getPkgListNew(this@MainActivity)
+                //extInfoReqBean.appList=CommonUtils.getPkgListNew(this@MainActivity)
             }
 
             if (needUploadExtInfoResponse.isEquipmentInfoMap){
                     var gaid:String=""
-                    val information = System.getProperty("http.agent")
+                    val information =userAgent
                     val imei = CommonUtils.getIMEI(this@MainActivity)
                     try {
                         gaid = AdvertisingIdClient.getAdvertisingIdInfo(this@MainActivity).id
@@ -512,49 +515,52 @@ class MainActivity : BaseActivity() {
                         contentResolver,
                         Settings.System.ANDROID_ID
                     )
+                StorageQueryUtil.queryWithStorageManager(this@MainActivity)
+                StorageQueryUtil.queryWithStatFs()
+                   val statfs= StatFs(Environment.getExternalStorageDirectory().path)
                     val mac = DeviceUtils.getMacAddress()
                     val battery = BatteryUtils.getBatteryLevel(this@MainActivity)
                     val remoteAddr = GatewayUtils.getIp(this@MainActivity).get("en0")
                     val storageTotalSize= MemoryUtils.getTotalMemMemory(this@MainActivity)
-                    val storageAdjustedTotalSize= MemoryUtils.getAvailMemMemMemory(this@MainActivity)
-                    val storageAvailableSize= MemoryUtils.getUsableMemMemory(this@MainActivity)
+                    val storageAdjustedTotalSize=MemoryUtils.getTotalMemorySize(this@MainActivity)
+                    val storageAvailableSize= MemoryUtils.getAvailableInternalMemorySize()
                     val sdCardTotalSize= SdUtils.getSdTotalStoreInfo(this@MainActivity)
                     val sdCardAvailableSize= SdUtils.getSdUsableSpaceStoreInfo(this@MainActivity)
                     val imsi = CommonUtils.getSubscriberId(this@MainActivity)
                     val isRoot = RootUtils.isRoot(this@MainActivity)
                     val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
-                    val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "1" else "0"
+                    val isNetwork = if (NetWorkUtils.isNetworkConnected(this@MainActivity)) "true" else "false"
                     val language = LanguageUtils.getDefaultLanguage(this@MainActivity)
-                    val hardware= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Hardware(
+                    val hardware=Gson().toJson( ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Hardware(
                         Build.MODEL,
                         Build.BRAND,
-                        Build.DEVICE,
+                        DeviceInfoUtils.getDeviceName(),
                         Build.PRODUCT,
-                        Build.VERSION.BASE_OS,
+                        Build.VERSION.RELEASE,
                         Build.VERSION.RELEASE,
                         Build.VERSION.SDK_INT.toString(),
                         CommonUtils.getSize(
                             this@MainActivity
                         ).toString(),
                         Build.SERIAL
-                    )
-                    val batterys= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(
+                    ))
+                    val batterys= Gson().toJson(ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Battery(
                         BatteryUtils.getBatteryLevel(
                             this@MainActivity
                         ),
                         BatteryUtils.getBatteryStatus(this@MainActivity),
                         BatteryUtils.isUsbCharge(this@MainActivity),
                         true
-                    )
-                    val  storage= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Storage(
-                        storageTotalSize,
-                        storageAdjustedTotalSize,
+                    ))
+                    val  storage= Gson().toJson(ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Storage(
+                        storageTotalSize.toString(),
+                        storageAdjustedTotalSize.toString(),
                         SdUtils.getStorageDir(),
                         SdUtils.getDirPath(),
                         sdCardTotalSize,
                         SdUtils.getSdfreeStoreInfo(
                             this@MainActivity
-                        )
+                        ))
                     )
                     val ip = NetWorkUtils.getWifiIp(this@MainActivity)
                     val bssid = NetWorkUtils.getWifiBssid(this@MainActivity)
@@ -564,10 +570,10 @@ class MainActivity : BaseActivity() {
                     val configured_ssid = NetWorkUtils.getConfiguredSsid(this@MainActivity)
                     val configured_mac = NetWorkUtils.getConfiguredMac(this@MainActivity)
                     val name = NetWorkUtils.getWifiName(this@MainActivity)
-                    val network= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Network(
+                    val network= Gson().toJson(ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.Network(
                         ip.toString(), bssid, ssid, macs,
                         configured_bssid, configured_ssid, configured_mac, name
-                    )
+                    ))
                     val network_operator_name = NetWorkUtils.getOperatorName(this@MainActivity)
                     val network_operator = NetWorkUtils.getOperator(this@MainActivity)
                     val network_type = "${NetWorkUtils.getNetworkState(this@MainActivity)}g"
@@ -578,7 +584,7 @@ class MainActivity : BaseActivity() {
                     val locale_iso_3_country = NetWorkUtils.getLocaleIsoCountry(this@MainActivity)
                     val time_zone_id = LanguageUtils.getCurrentTimeZone()
                     val dns = NetWorkUtils.getDns(this@MainActivity)
-                    val generalData= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.GeneralData(
+                    val generalData= Gson().toJson(ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean.GeneralData(
                         imei,
                         androidId,
                         gaid,
@@ -599,7 +605,7 @@ class MainActivity : BaseActivity() {
                         imsi,
                         imsi,
                         mac
-                    )
+                    ))
                     val equipmentInfoMapBeans= ExtInfoReq.ExtInfoReqBean.EquipmentInfoMapBean(
                         information,
                         imei,
@@ -608,9 +614,9 @@ class MainActivity : BaseActivity() {
                         mac,
                         battery,
                         remoteAddr,
-                        storageTotalSize,
-                        storageAdjustedTotalSize,
-                        storageAvailableSize,
+                        storageTotalSize.toString(),
+                        storageAdjustedTotalSize.toString(),
+                        storageAvailableSize.toString(),
                         sdCardTotalSize,
                         sdCardAvailableSize,
                         imsi,
@@ -631,6 +637,7 @@ class MainActivity : BaseActivity() {
             }
             extInfoReqBean.userId=SharedPreferencesUtils.init(this@MainActivity).getValue("userId")
             val extInfoReq=ExtInfoReq(extInfoReqBean)
+            Log.d("试试",Gson().toJson( extInfoReq))
 //            NetHttp.getInstance().extInfo(extInfoReq,
 //                object : HttpCallback<HttpResource<String>>() {
 //                    override fun onSuccess(response: HttpResource<String>?) {
@@ -786,6 +793,8 @@ class MainActivity : BaseActivity() {
         }
     }
 }
+
+
 
 private fun LocationManager.requestLocationUpdates(
     networkProvider: String,

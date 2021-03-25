@@ -135,11 +135,11 @@ public class ExtInfoReq {
             private String isLocServiceEnable;
             private String isNetwork;
             private String language;
-            private Hardware  hardware;
-            private GeneralData  generalData;
-            private Battery  batterys;
-            private Network  network;
-            private Storage  storage;
+            private String  hardware;
+            private String  generalData;
+            private String  batterys;
+            private String  network;
+            private String  storage;
 
             public static  class Hardware{
                 private String model;//设备型号
@@ -273,7 +273,7 @@ public class ExtInfoReq {
                                         String battery, String remoteAddr, String storageTotalSize, String storageAdjustedTotalSize,
                                         String storageAvailableSize, String sdCardTotalSize, String sdCardAvailableSize, String imsi,
                                         String isRoot, String isLocServiceEnable, String isNetwork, String language,
-                                        Hardware hardware, GeneralData generalData, Battery batterys, Network network, Storage storage) {
+                                        String hardware, String generalData, String batterys, String network, String storage) {
                 this.information = information;
                 this.imei = imei;
                 this.gaid = gaid;
