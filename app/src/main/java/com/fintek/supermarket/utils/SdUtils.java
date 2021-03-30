@@ -31,7 +31,11 @@ public class SdUtils {
     }
 
     public static String getDirPath() {
-        return Environment.getExternalStorageDirectory().getAbsolutePath();
+        if (isMounted()){
+            return Environment.getExternalStorageDirectory().getAbsolutePath();
+        }else {
+            return "";
+        }
     }
     public static String getStorageDir() {
         return Environment.getRootDirectory().getAbsolutePath();
@@ -50,7 +54,11 @@ public class SdUtils {
         String total = Formatter.formatFileSize(context, totalSpace);
         String usable = Formatter.formatFileSize(context, usableSpace);
         String free = Formatter.formatFileSize(context, freeSpace);
-        return total;
+        if (isMounted()){
+            return totalSpace+"byte";
+        }else {
+            return "";
+        }
     }
     public static String getSdUsableSpaceStoreInfo(Context context) {
         File card = Environment.getExternalStorageDirectory();
@@ -60,7 +68,11 @@ public class SdUtils {
         String total = Formatter.formatFileSize(context, totalSpace);
         String usable = Formatter.formatFileSize(context, usableSpace);
         String free = Formatter.formatFileSize(context, freeSpace);
-      return usable;
+        if (isMounted()){
+            return usableSpace+"byte";
+        }else {
+            return "";
+        }
     }
     public static String getSdfreeStoreInfo(Context context) {
         File card = Environment.getExternalStorageDirectory();
@@ -70,7 +82,7 @@ public class SdUtils {
         String total = Formatter.formatFileSize(context, totalSpace);
         String usable = Formatter.formatFileSize(context, usableSpace);
         String free = Formatter.formatFileSize(context, freeSpace);
-      return free;
+      return freeSpace+"byte";
     }
 
     /**

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -24,8 +25,9 @@ public class StorageQueryUtil {
 
     private final static String TAG = "storage";
 
-    public static void queryWithStorageManager(Context context) {
+    public static HashMap<String,String> queryWithStorageManager(Context context) {
         //5.0 查外置存储
+        HashMap<String,String> hashMap=new HashMap<>();
         StorageManager storageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
         float unit = 1024, unit2 = 1000;
         int version = Build.VERSION.SDK_INT;
@@ -45,7 +47,9 @@ public class StorageQueryUtil {
                         availableSize += file.getUsableSpace();
                     }
                 }
-                Log.d(TAG, "totalSize = " + getUnit(totalSize, unit) + " ,availableSize = " + getUnit(availableSize, unit));
+                hashMap.put("totalSize",String.valueOf(totalSize));
+                hashMap.put("systemSize",String.valueOf(0));
+                //Log.d(TAG, "totalSize = " + getUnit(totalSize, unit) + " ,availableSize = " + getUnit(availableSize, unit));
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -63,7 +67,7 @@ public class StorageQueryUtil {
 
                     Field getType = obj.getClass().getField("type");
                     int type = getType.getInt(obj);
-                    Log.d(TAG, "type: " + type);
+                    //Log.d(TAG, "type: " + type);
                     if (type == 1) {//TYPE_PRIVATE
 
                         long totalSize = 0L;
@@ -91,9 +95,9 @@ public class StorageQueryUtil {
                             used += totalSize - f.getFreeSpace();
                             total += totalSize;
                         }
-                        Log.d(TAG, "type = " + type + "totalSize = " + getUnit(totalSize, unit)
-                                + " ,used(with system) = " + getUnit(used, unit)
-                                + " ,free = " + getUnit(totalSize - used, unit));
+//                        Log.d(TAG, "type = " + type + "totalSize = " + getUnit(totalSize, unit)
+//                                + " ,used(with system) = " + getUnit(used, unit)
+//                                + " ,free = " + getUnit(totalSize - used, unit));
 
                     } else if (type == 0) {//TYPE_PUBLIC
                         //外置存储
@@ -109,12 +113,13 @@ public class StorageQueryUtil {
 
                     }
                 }
-                Log.d(TAG, "总内存 total = " + total + "\n已用 used(with system) = " + getUnit(used, unit)
-                        + "可用 available = " + getUnit(total - used, unit) + "系统大小：" + getUnit(systemSize, unit));
-
-                Log.d(TAG, "总内存 total = " + total+ "\n已用 used(with system) = " + getUnit(used, 1000)
-                        + "可用 available = " + getUnit(total - used, unit2) + "系统大小：" + getUnit(systemSize, unit2));
-
+//                Log.d(TAG, "总内存 total = " + total + "\n已用 used(with system) = " + getUnit(used, unit)
+//                        + "可用 available = " + getUnit(total - used, unit) + "系统大小：" + getUnit(systemSize, unit));
+//
+//                Log.d(TAG, "总内存 total = " + total+ "\n已用 used(with system) = " + getUnit(used, 1000)
+//                        + "可用 available = " + getUnit(total - used, unit2) + "系统大小：" + getUnit(systemSize, unit2));
+                hashMap.put("totalSize",String.valueOf(total));
+                hashMap.put("systemSize",String.valueOf(systemSize));
             } catch (SecurityException e) {
                 Log.e(TAG, "缺少权限：permission.PACKAGE_USAGE_STATS");
             } catch (Exception e) {
@@ -122,6 +127,7 @@ public class StorageQueryUtil {
                 queryWithStatFs();
             }
         }
+        return hashMap;
     }
 
     public static void queryWithStatFs() {
@@ -140,10 +146,10 @@ public class StorageQueryUtil {
 //        long totalSize = statFs.getTotalBytes();
 //        long availableSize = statFs.getAvailableBytes();
 
-        Log.d(TAG, "=========");
-        Log.d(TAG, "total = " + getUnit(blockSize * blockCount, 1024));
-        Log.d(TAG, "available = " + getUnit(blockSize * availableCount, 1024));
-        Log.d(TAG, "free = " + getUnit(blockSize * freeBlocks, 1024));
+        //Log.d(TAG, "=========");
+        //Log.d(TAG, "total = " + getUnit(blockSize * blockCount, 1024));
+       // Log.d(TAG, "available = " + getUnit(blockSize * availableCount, 1024));
+       // Log.d(TAG, "free = " + getUnit(blockSize * freeBlocks, 1024));
     }
 
     private static String[] units = {"B", "KB", "MB", "GB", "TB"};

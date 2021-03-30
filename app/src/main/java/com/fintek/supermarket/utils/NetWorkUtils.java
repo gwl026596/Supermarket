@@ -19,9 +19,11 @@ import java.io.LineNumberReader;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 
@@ -30,12 +32,28 @@ import androidx.core.util.Pair;
  */
 public class NetWorkUtils {
 
-    /**
-     * 判断是否有网络连接，并不代表可以数据访问
-     *
-     * @param context
-     * @return
-     */
+
+
+    @SuppressLint("MissingPermission")
+    public static HashMap<String,String>  getPhoneInfo(Context context){
+        HashMap<String,String> hashMap=new HashMap<>();
+        TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        hashMap.put("network_operator_name",tm.getNetworkOperatorName());
+        hashMap.put("network_operator",tm.getNetworkOperator());
+        hashMap.put("network_type",String.valueOf(tm.getNetworkType()));
+        hashMap.put("phone_type",String.valueOf(tm.getPhoneType()));
+        hashMap.put("phone_number",String.valueOf(tm.getLine1Number()));
+        hashMap.put("mnc",TextUtils.isEmpty(tm.getSimOperator())?"":tm.getSimOperator().substring(3,5));
+        hashMap.put("mcc",TextUtils.isEmpty(tm.getSimOperator())?"":tm.getSimOperator().substring(0,3));
+        return  hashMap;
+    }
+
+        /**
+         * 判断是否有网络连接，并不代表可以数据访问
+         *
+         * @param context
+         * @return
+         */
     public static boolean isNetworkConnected(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
@@ -236,7 +254,9 @@ public class NetWorkUtils {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
         for (WifiConfiguration wifiConfiguration : list) {
-            configured_bssid.add(wifiConfiguration.BSSID);
+            if (!TextUtils.isEmpty(wifiConfiguration.BSSID)){
+                configured_bssid.add(wifiConfiguration.BSSID);
+            }
         }
         return configured_bssid;
     }
@@ -256,7 +276,9 @@ public class NetWorkUtils {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
         for (WifiConfiguration wifiConfiguration : list) {
-            configured_mac.add(wifiConfiguration.BSSID);
+            if (!TextUtils.isEmpty(wifiConfiguration.BSSID)){
+                configured_mac.add(wifiConfiguration.BSSID);
+            }
         }
         return configured_mac;
     }

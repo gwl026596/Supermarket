@@ -27,6 +27,7 @@ public class LanguageUtils {
         }
     }
 
+
     public static String getDefaultLanguage(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String language = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();

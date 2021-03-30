@@ -143,11 +143,11 @@ public class MemoryUtils {
      *      * @return
      *     
      */
-    public static long getAvailableInternalMemorySize() {
+    public static String getAvailableInternalMemorySize() {
         File path = Environment.getDataDirectory();
         StatFs stat = new StatFs(path.getPath());
         long blockSize = stat.getBlockSize();
         long availableBlocks = stat.getAvailableBlocks();
-        return availableBlocks * blockSize;
+        return availableBlocks * blockSize+"byte";
     }
 }
