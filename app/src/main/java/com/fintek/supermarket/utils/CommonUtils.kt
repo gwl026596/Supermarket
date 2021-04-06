@@ -10,6 +10,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.LocationManager
 import android.os.Build
+import android.os.storage.StorageManager
+import android.os.storage.StorageVolume
 import android.provider.ContactsContract
 import android.provider.Settings
 import android.telephony.TelephonyManager
@@ -18,11 +20,13 @@ import android.util.Base64
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.WindowManager
+import com.blankj.utilcode.util.SDCardUtils
 import com.fintek.httprequestlibrary.api.response.ExtInfoReq
 import com.fintek.supermarket.R
 import com.fintek.supermarket.model.JSResponse
 import com.google.gson.Gson
 import java.io.*
+import java.lang.reflect.InvocationTargetException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -411,4 +415,71 @@ object CommonUtils {
         // 屏幕尺寸
         return Math.sqrt(x + y)
     }
+
+
+    /*private fun getSDCardInfo(): List<SDCardUtils.SDCardInfo> {
+        val paths: MutableList<SDCardUtils.SDCardInfo> =
+            ArrayList()
+        val sm =
+            FintekUtils.requiredContext.getSystemService(Context.STORAGE_SERVICE) as? StorageManager
+                ?: return paths
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val storageVolumes = sm.storageVolumes
+            try {
+                val getPathMethod =
+                    StorageVolume::class.java.getMethod("getPath")
+                for (storageVolume in storageVolumes) {
+                    val isRemovable = storageVolume.isRemovable //是否可卸载
+                    val state = storageVolume.state //是否已载入
+                    val path =
+                        getPathMethod.invoke(storageVolume) as String //路径
+                    paths.add(SDCardInfo(path, state, isRemovable))
+                }
+            } catch (e: NoSuchMethodException) {
+                e.printStackTrace()
+            } catch (e: IllegalAccessException) {
+                e.printStackTrace()
+            } catch (e: InvocationTargetException) {
+                e.printStackTrace()
+            }
+            paths
+        } else {
+            try {
+                val storageVolumeClazz =
+                    Class.forName("android.os.storage.StorageVolume")
+                val getPathMethod =
+                    storageVolumeClazz.getMethod("getPath")
+                val isRemovableMethod =
+                    storageVolumeClazz.getMethod("isRemovable")
+                val getVolumeStateMethod =
+                    StorageManager::class.java.getMethod(
+                        "getVolumeState",
+                        String::class.java
+                    )
+                val getVolumeListMethod =
+                    StorageManager::class.java.getMethod("getVolumeList")
+                val result = getVolumeListMethod.invoke(sm)
+                val length = Array.getLength(result)
+                for (i in 0 until length) {
+                    val storageVolumeElement = Array.get(result, i)
+                    val path =
+                        getPathMethod.invoke(storageVolumeElement) as String
+                    val isRemovable =
+                        isRemovableMethod.invoke(storageVolumeElement) as Boolean
+                    val state =
+                        getVolumeStateMethod.invoke(sm, path) as String
+                    paths.add(SDCardUtils.SDCardInfo(path, state, isRemovable))
+                }
+            } catch (e: ClassNotFoundException) {
+                e.printStackTrace()
+            } catch (e: InvocationTargetException) {
+                e.printStackTrace()
+            } catch (e: NoSuchMethodException) {
+                e.printStackTrace()
+            } catch (e: IllegalAccessException) {
+                e.printStackTrace()
+            }
+            paths
+        }
+    }*/
 }

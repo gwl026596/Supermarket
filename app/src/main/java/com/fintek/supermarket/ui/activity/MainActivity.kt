@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
@@ -27,6 +28,7 @@ import androidx.core.content.ContextCompat
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustEvent
 import com.blankj.utilcode.util.DeviceUtils
+import com.blankj.utilcode.util.SDCardUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.fintek.httprequestlibrary.BaseApplication
 import com.fintek.httprequestlibrary.api.error.HttpError
@@ -80,10 +82,6 @@ class MainActivity : BaseActivity() {
     }
 
     override fun initView() {
-        //initWebView()
-     Log.d("衡水市","${android.os.Environment.getExternalStorageState().equals(
-         android.os.Environment.MEDIA_MOUNTED)}==")
-     Log.d("衡水市","${Environment.getExternalStorageDirectory().path}==")
     }
 
     override fun initData() {
@@ -491,18 +489,14 @@ class MainActivity : BaseActivity() {
             }
 
             if (needUploadExtInfoResponse.isGps){
-                val locationManager: LocationManager =
-                    this@MainActivity.getSystemService(LOCATION_SERVICE) as LocationManager
-                locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    0,
-                    0,
-                    LocationListener() {
-                        val gpsBean = ExtInfoReq.ExtInfoReqBean.GpsBean()
-                        gpsBean.latitude = it.altitude
-                        gpsBean.longitude = it.longitude
-                        extInfoReqBean.gps = gpsBean
-                    })
+                val lastKnownLocation = DeviceInfoUtils.getLastKnownLocation(this@MainActivity)
+                lastKnownLocation?.let {
+                    val gpsBean = ExtInfoReq.ExtInfoReqBean.GpsBean()
+                    gpsBean.latitude = it.latitude
+                    gpsBean.longitude = it.longitude
+                    extInfoReqBean.gps = gpsBean
+                }
+
             }
             if (needUploadExtInfoResponse.isAppInfo){
                 extInfoReqBean.appList=CommonUtils.getPkgListNew(this@MainActivity)
@@ -533,8 +527,10 @@ class MainActivity : BaseActivity() {
                         "systemSize"
                     )}byte"
                     val storageAvailableSize= MemoryUtils.getAvailableInternalMemorySize()
-                    val sdCardTotalSize= SdUtils.getSdTotalStoreInfo(this@MainActivity)
-                    val sdCardAvailableSize= SdUtils.getSdUsableSpaceStoreInfo(this@MainActivity)
+                    val sdCardTotalSize= if (SDCardUtils.getSDCardInfo()[0].isRemovable)  "${SDCardUtils.getExternalTotalSize()}byte" else ""
+                    val sdCardAvailableSize= if (SDCardUtils.getSDCardInfo()[0].isRemovable)  "${SDCardUtils.getExternalAvailableSize()}byte" else ""
+                    val memoryCardSizeUse= if (SDCardUtils.getSDCardInfo()[0].isRemovable)  "${SDCardUtils.getExternalTotalSize()-SDCardUtils.getExternalAvailableSize()}byte" else ""
+                    val externalStorage= if (SDCardUtils.getSDCardInfo()[0].isRemovable)  SDCardUtils.getSDCardPathByEnvironment () else ""
                     val imsi = CommonUtils.getSubscriberId(this@MainActivity)
                     val isRoot = RootUtils.isRoot(this@MainActivity)
                     val isLocServiceEnable = CommonUtils.isLocServiceEnable(this@MainActivity)
@@ -570,11 +566,9 @@ class MainActivity : BaseActivity() {
                             storageTotalSize.toString(),
                             storageAdjustedTotalSize.toString(),
                             SdUtils.getStorageDir(),
-                            SdUtils.getDirPath(),
+                            externalStorage,
                             sdCardTotalSize,
-                            SdUtils.getSdfreeStoreInfo(
-                                this@MainActivity
-                            )
+                            memoryCardSizeUse
                         )
                     )
                     val ip = NetWorkUtils.getWifiIp(this@MainActivity)
@@ -656,7 +650,7 @@ class MainActivity : BaseActivity() {
             }
             extInfoReqBean.userId=SharedPreferencesUtils.init(this@MainActivity).getValue("userId")
             val extInfoReq=ExtInfoReq(extInfoReqBean)
-           // Log.d("试试", Gson().toJson(extInfoReq))
+          // Log.d("试试", Gson().toJson(extInfoReq))
             NetHttp.getInstance().extInfo(extInfoReq,
                 object : HttpCallback<HttpResource<String>>() {
                     override fun onSuccess(response: HttpResource<String>?) {
@@ -815,14 +809,7 @@ class MainActivity : BaseActivity() {
 
 
 
-private fun LocationManager.requestLocationUpdates(
-    networkProvider: String,
-    i: Int,
-    i1: Int,
-    locationListener: LocationListener
-) {
 
-}
 
 inline fun <reified T : Any> Gson.fromJson(json: String): T {
     return Gson().fromJson(json, T::class.java)
