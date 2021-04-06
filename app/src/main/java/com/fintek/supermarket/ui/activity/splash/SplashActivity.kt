@@ -29,7 +29,7 @@ class SplashActivity : BaseActivity() {
         if (!isTaskRoot) {
             finish()
         }
-        val adjustEvent = AdjustEvent("td8kon")
+        val adjustEvent = AdjustEvent("ae67pt")
         Adjust.trackEvent(adjustEvent)
         NetHttp.getInstance().getIsEnterCurrentApp(object : HttpCallback<HttpResource<String>>() {
             override fun onSuccess(response: HttpResource<String>?) {

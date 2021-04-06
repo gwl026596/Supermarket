@@ -36,10 +36,10 @@ ext {//定义所有project公用参数  使用rootProject.ext.XX就能拿到相�
             'url_h5'        : 'http://106.14.161.98/1.2.3/app-loan-market/#/',
     ]
     release = [
-            'host'              : 'http://106.14.161.98:8280/',
-            'url_h5_header'        : 'http://106.14.161.98/',
-            'url_h5_footer'        : '/app-loan-market/#/',
-            'url_h5'        : 'http://106.14.161.98/1.2.3/app-loan-market/#/',
+            'host'              : 'https://loanmarket.mattandy.id/',
+            'url_h5_header'        : 'https://loanmarket.mattandy.id/',
+            'url_h5_footer'        : '/#/',
+            'url_h5'        : 'https://loanmarket.mattandy.id/#/',
 
     ]
 

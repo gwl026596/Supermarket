@@ -18,23 +18,23 @@ import ai.advance.liveness.lib.Market;
 
 public class MyAppclication extends BaseApplication {
 
-    public static String xMerchan="fintek-loan-supermarket";
+    public static String xMerchan="Kota Emas";
     public static String xVersion=BuildConfig.VERSION_NAME;
     public static String adid="";
-    public static String appName="Supermarket";
+    public static String appName="Kota Emas";
     public static String xPackageName=BuildConfig.APPLICATION_ID;
     @Override
     public void onCreate() {
         super.onCreate();
-        String appToken = "hbrc72i7o2dc";
+        String appToken = "8491oku9rudc";
         String environment = AdjustConfig.ENVIRONMENT_SANDBOX;
         AdjustConfig config = new AdjustConfig(this, appToken, environment);
-        config.setAppSecret(1, 180143412, 1141056911, 755975302, 7869662);
+        config.setAppSecret(1, 2132576493, 1936989722, 1016585277, 485009239);
         config.setLogLevel(LogLevel.VERBOSE);
         Adjust.onCreate(config);
         registerActivityLifecycleCallbacks(new AdjustLifecycleCallbacks());
 
-        GuardianLivenessDetectionSDK.init(this, "60e345c88498fc24","fd91c16b243116a4", Market.Indonesia);
+        GuardianLivenessDetectionSDK.init(this, "61109d8ff2ad64fd","e7155974a7824c4f", Market.Indonesia);
         GuardianLivenessDetectionSDK.letSDKHandleCameraPermission();
     }
     private static final class AdjustLifecycleCallbacks implements ActivityLifecycleCallbacks {

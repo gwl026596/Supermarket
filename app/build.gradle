@@ -9,11 +9,11 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.fintek.supermarket"
+        applicationId "com.fintek.supermarket_eighth"
         minSdkVersion 17
         targetSdkVersion 30
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
@@ -28,7 +28,14 @@ android {
             dirs project(':liveness').file('libs')
         }
     }
-
+    signingConfigs {
+        releaseconfig {
+            keyAlias 'kotaemas'
+            keyPassword 'kotaemas123'
+            storeFile rootProject.file('kotaemas.jks')
+            storePassword 'kotaemas123'
+        }
+    }
     buildTypes {
 
         debug {
@@ -47,7 +54,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             zipAlignEnabled false
-            //signingConfig signingConfigs.releaseconfig
+            signingConfig signingConfigs.releaseconfig
             debuggable true
             shrinkResources false
 

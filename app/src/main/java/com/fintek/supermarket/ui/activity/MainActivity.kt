@@ -118,9 +118,9 @@ class MainActivity : BaseActivity() {
             if (requestModel.type == "appEvent") {
                 Log.d("换试试", requestModel.requestParamsData.replace("\"", ""))
                 val eventToken = when (requestModel.requestParamsData.replace("\"", "")) {
-                    "applyEvent" -> "fcx4vl"
-                    "registerEvent" -> "69dk9s"
-                    else -> "33fjou"
+                    "applyEvent" -> "d4r7k8"
+                    "registerEvent" -> "vi71n5"
+                    else -> "rjw8nj"
                 }
                 Log.d("换试试", eventToken)
                 val adjustEvent = AdjustEvent(eventToken)
