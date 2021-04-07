@@ -21,6 +21,7 @@ android {
 
         debug {
             minifyEnabled false
+            debuggable true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField "String", "API_HOST", "\"$rootProject.ext.debug.host\""
             buildConfigField "String", "URL_H5_HEADER", "\"$rootProject.ext.debug.url_h5_header\""
@@ -30,6 +31,7 @@ android {
 
         release {
             minifyEnabled false
+            debuggable true//是否网络请求打印log
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField "String", "API_HOST", "\"$rootProject.ext.release.host\""
             buildConfigField "String", "URL_H5_HEADER", "\"$rootProject.ext.release.url_h5_header\""

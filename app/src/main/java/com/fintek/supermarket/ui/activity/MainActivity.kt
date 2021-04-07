@@ -718,7 +718,7 @@ class MainActivity : BaseActivity() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
                     hideLoading()
                     val ocrOssId =
-                        "fintek-loan-supermarket" + "_ocr_" + SharedPreferencesUtils.init(this@MainActivity)
+                        MyAppclication.xMerchan + "_ocr_" + SharedPreferencesUtils.init(this@MainActivity)
                             .getValue("userId") + ".png"
                     val jsResponse = JSResponse(
                         1,
@@ -758,7 +758,7 @@ class MainActivity : BaseActivity() {
                 override fun onSuccess(response: HttpResource<LivenessUrlResponse>?) {
                     hideLoading()
                     val livenessOssId =
-                        "fintek-loan-supermarket" + "_live_" + SharedPreferencesUtils.init(this@MainActivity)
+                        MyAppclication.xMerchan + "_live_" + SharedPreferencesUtils.init(this@MainActivity)
                             .getValue("userId") + ".png"
                     val jsResponse = JSResponse(
                         1,

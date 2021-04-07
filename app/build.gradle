@@ -46,7 +46,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             zipAlignEnabled false
             //signingConfig signingConfigs.releaseconfig
-            debuggable true
+            debuggable false
             shrinkResources false
         }
 

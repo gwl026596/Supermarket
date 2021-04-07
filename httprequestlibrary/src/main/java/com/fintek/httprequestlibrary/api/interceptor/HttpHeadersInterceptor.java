@@ -26,9 +26,9 @@ public class HttpHeadersInterceptor implements Interceptor {
         headers.put("Content-Type",  "application/json");
         headers.put("Accept",  "application/json");
         headers.put("x-auth-token", BaseApplication.xAuthToken);
-        headers.put("x-merchant",  "fintek-loan-supermarket");
+        headers.put("x-merchant",  "Kota Emas");
         headers.put("x-version",  "1.0.0");
-        headers.put("x-package-name",  "com.fintek.supermarket");
+        headers.put("x-package-name",  "com.fintek.supermarket_eighth");
         return Headers.of(headers);
     }
 
