@@ -9,13 +9,9 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.os.StatFs
 import android.provider.ContactsContract
 import android.provider.Settings
 import android.text.TextUtils
@@ -116,14 +112,15 @@ class MainActivity : BaseActivity() {
             Log.d("js调用android1", args.toString())
             val requestModel: RequestModel = Gson().fromJson(args.toString())
             if (requestModel.type == "appEvent") {
-                Log.d("换试试", requestModel.requestParamsData.replace("\"", ""))
                 val eventToken = when (requestModel.requestParamsData.replace("\"", "")) {
                     "applyEvent" -> "d4r7k8"
                     "registerEvent" -> "vi71n5"
                     else -> "rjw8nj"
                 }
-                Log.d("换试试", eventToken)
                 val adjustEvent = AdjustEvent(eventToken)
+                adjustEvent.addCallbackParameter(requestModel.requestParamsData.replace("\"", ""), eventToken)
+                adjustEvent.addCallbackParameter("phone", SharedPreferencesUtils.init(this@MainActivity).getValue("phone"))
+                adjustEvent.addCallbackParameter("userId", SharedPreferencesUtils.init(this@MainActivity).getValue("userId"))
                 Adjust.trackEvent(adjustEvent)
             } else if (requestModel.type == "doBrowser") {
                 val requestParamsData: String = requestModel.requestParamsData
@@ -394,7 +391,13 @@ class MainActivity : BaseActivity() {
             } else if (requestCode === REQUEST_CODE_TAKE) {
                 showLoading()
                 val path = data?.getStringExtra("bitmapBase64")
-                uploadOcrBitmap(path ?: "", CommonUtils.imagePathToBase64(PhotoOperateUtils(this@MainActivity).scal(path).path) ?: "")
+                uploadOcrBitmap(
+                    path ?: "", CommonUtils.imagePathToBase64(
+                        PhotoOperateUtils(this@MainActivity).scal(
+                            path
+                        ).path
+                    ) ?: ""
+                )
             } else if (requestCode === CROP_PICTURE) { // 取得裁剪后的图片
                 try {
                     val selectedImage: Bitmap =

@@ -11,6 +11,7 @@ import com.fintek.httprequestlibrary.api.service.NetHttp
 import com.fintek.supermarket.R
 import com.fintek.supermarket.ui.activity.MainActivity
 import com.fintek.supermarket.ui.activity.base.BaseActivity
+import com.fintek.supermarket.utils.SharedPreferencesUtils
 
 class SplashActivity : BaseActivity() {
     private var isEntertag: Boolean = false
