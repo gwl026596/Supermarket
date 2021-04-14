@@ -12,6 +12,7 @@ import com.adjust.sdk.Adjust;
 import com.adjust.sdk.AdjustConfig;
 import com.adjust.sdk.LogLevel;
 import com.fintek.httprequestlibrary.BaseApplication;
+import com.fintek.supermarket.crashHandlerException.CrashHandler;
 
 import ai.advance.liveness.lib.GuardianLivenessDetectionSDK;
 import ai.advance.liveness.lib.Market;
@@ -26,6 +27,9 @@ public class MyAppclication extends BaseApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+        //	在这里为程序设置异常处理，才能捕获到未处理的异常
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(getApplicationContext());
         String appToken = "8491oku9rudc";
         String environment = AdjustConfig.ENVIRONMENT_SANDBOX;
         AdjustConfig config = new AdjustConfig(this, appToken, environment);
@@ -36,6 +40,8 @@ public class MyAppclication extends BaseApplication {
 
         GuardianLivenessDetectionSDK.init(this, "61109d8ff2ad64fd","e7155974a7824c4f", Market.Indonesia);
         GuardianLivenessDetectionSDK.letSDKHandleCameraPermission();
+
+
     }
     private static final class AdjustLifecycleCallbacks implements ActivityLifecycleCallbacks {
         @Override
