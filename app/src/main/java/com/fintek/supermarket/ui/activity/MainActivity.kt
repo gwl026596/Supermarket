@@ -183,6 +183,7 @@ class MainActivity : BaseActivity() {
             val type = jsonObject.getString("type")
             val requestParamsData = jsonObject.getString("requestParamsData")
             if (type == "getHttpHeaderJson") {
+                MyAppclication.adid=Adjust.getAdid()
                 val hashMapOf = hashMapOf<String, String>()
                 val token = if (!TextUtils.isEmpty(
                         SharedPreferencesUtils
@@ -193,7 +194,7 @@ class MainActivity : BaseActivity() {
                 hashMapOf.put("x-auth-token", token)
                 hashMapOf.put("x-merchant", MyAppclication.xMerchan)
                 hashMapOf.put("x-version", MyAppclication.xVersion)
-                hashMapOf.put("adid", MyAppclication.adid)
+                hashMapOf.put("adid", Adjust.getAdid())
                 hashMapOf.put("app-name", MyAppclication.appName)
                 hashMapOf.put("x-package-name", MyAppclication.xPackageName)
 

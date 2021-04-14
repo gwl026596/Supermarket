@@ -1,7 +1,19 @@
 package com.fintek.supermarket.crashHandlerException;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
+import android.util.Log;
+
+import com.fintek.httprequestlibrary.api.error.HttpError;
+import com.fintek.httprequestlibrary.api.response.HttpResource;
+import com.fintek.httprequestlibrary.api.response.OcrRespomse;
+import com.fintek.httprequestlibrary.api.service.HttpCallback;
+import com.fintek.httprequestlibrary.api.service.NetHttp;
+import com.fintek.supermarket.BuildConfig;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
@@ -35,7 +47,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        uploadExceptionToServer();
+        uploadExceptionToServer(e);
 
         if (mDefaultHandler != null) {
             //系统默认的异常处理器来处理,否则由自己来处理
@@ -48,8 +60,29 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
 
     //	上传到Server
-    private void uploadExceptionToServer() {
-        // TODO
+    private void uploadExceptionToServer(Throwable throwable) {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        printWriter.print("Android版本号 :");
+        printWriter.println(Build.VERSION.RELEASE);
+        printWriter.print("手机品牌 :");
+        printWriter.println(Build.BRAND);
+        printWriter.print("设备型号 :");
+        printWriter.println(Build.DEVICE);
+        throwable.printStackTrace(printWriter);
+        printWriter.close();
+        Log.d("接电话的",stringWriter.toString());
+        NetHttp.getInstance().uoloadDebug(stringWriter.toString(), "崩溃日志", BuildConfig.VERSION_NAME, new HttpCallback<HttpResource<Boolean>>() {
+            @Override
+            public void onSuccess(HttpResource<Boolean> response) {
+
+            }
+
+            @Override
+            public void onFail(HttpError yySportError) {
+
+            }
+        });
     }
 
 }

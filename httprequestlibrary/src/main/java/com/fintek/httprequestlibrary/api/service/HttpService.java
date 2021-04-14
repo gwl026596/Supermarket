@@ -52,6 +52,11 @@ public interface HttpService {
     @POST("api/auth/ocr-advance")
     Call<HttpResource<OcrRespomse>> uoloadOcrAdvance(@Field("base64Img") String base64Img);
 
+    //上报debug日志
+    @FormUrlEncoded
+    @POST("api/common/debug")
+    Call<HttpResource<Boolean>> uoloadDebug(@Field("content") String content,@Field("type") String type,@Field("version") String version);
+
     //获取appConfig字典数据
     @POST("api/common/get-app-config")
     Call<HttpResource<AppConfigResponse>> getAppConfig(@Body AppConfigTypeReq appConfigTypeReq);

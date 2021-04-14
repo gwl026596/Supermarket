@@ -54,6 +54,10 @@ public class NetHttp {
     public void uoloadOcrAdvance(String base64Img, HttpCallback<HttpResource<OcrRespomse>> callback) {
         RetrofitManager.getInstance().getService().uoloadOcrAdvance(base64Img).enqueue(callback);
     }
+    //上报debug日志
+    public void uoloadDebug(String content, String type, String version, HttpCallback<HttpResource<Boolean>> callback) {
+        RetrofitManager.getInstance().getService().uoloadDebug(content,type,version).enqueue(callback);
+    }
     //获取appConfig字典数据
     public void getAppConfig(AppConfigTypeReq appConfigTypeReq, HttpCallback<HttpResource<AppConfigResponse>> callback) {
         RetrofitManager.getInstance().getService().getAppConfig(appConfigTypeReq).enqueue(callback);

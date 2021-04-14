@@ -1,6 +1,7 @@
 package com.fintek.supermarket.ui.activity.splash
 
 import android.content.Intent
+import android.util.Log
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustEvent
 import com.fintek.httprequestlibrary.BuildConfig
@@ -16,14 +17,14 @@ import com.fintek.supermarket.utils.SharedPreferencesUtils
 class SplashActivity : BaseActivity() {
     private var isEntertag: Boolean = false
     private var isH5VersionTag: Boolean = false
-    private var url: String = BuildConfig.URL_H5
+    //private var url: String = BuildConfig.URL_H5
+    private var url: String? = null
 
     override fun getLayoutId(): Int {
         return R.layout.activity_splash
     }
 
     override fun initView() {
-
     }
 
     override fun initData() {
